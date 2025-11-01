@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="FZstg2TS56oRgofERCDS" name="Page-1">
-        <mxGraphModel dx="2100" dy="-96" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="1777" dy="-266" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -67,27 +67,14 @@
                 <mxCell id="4" value="Routes" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="868.5" y="1893" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="89" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="5" target="6">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="897" y="2342"/>
-                            <mxPoint x="926" y="2341"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="89" style="edgeStyle=none;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="5" target="6">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="107" style="edgeStyle=none;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="5" target="19">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="860" y="2342"/>
                             <mxPoint x="795" y="2342"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="109" style="edgeStyle=none;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="5" target="23">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="924" y="2304"/>
-                            <mxPoint x="1158" y="2307"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -132,7 +119,7 @@
                 <mxCell id="19" value="TransactionController" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="720" y="2660.45" width="138" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="93" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="57">
+                <mxCell id="93" style="edgeStyle=none;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="57">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="94" style="edgeStyle=none;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="55">
@@ -145,6 +132,9 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="97" style="edgeStyle=none;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="72">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="114" style="edgeStyle=none;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="23" target="113">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="23" value="&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;Adapters&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -196,13 +186,13 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="55" value="&lt;span style=&quot;&quot;&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;RabbitMQ&lt;/font&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#FFFFFF;strokeColor=#2D7600;" parent="1" vertex="1">
-                    <mxGeometry x="1406.5" y="2295" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1402.5" y="2256" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="56" value="Bcrypt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#FFFFFF;strokeColor=#2D7600;" parent="1" vertex="1">
-                    <mxGeometry x="1406.5" y="2372" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1402.5" y="2333" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="57" value="Uuid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#FFFFFF;strokeColor=#2D7600;" parent="1" vertex="1">
-                    <mxGeometry x="1406.5" y="2449" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1402.5" y="2410" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="61" value="Postgres" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="818" y="2876.45" width="120" height="60" as="geometry"/>
@@ -228,10 +218,10 @@
                     <mxGeometry x="1065" y="1765" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="70" value="Openai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#FFFFFF;strokeColor=#2D7600;" parent="1" vertex="1">
-                    <mxGeometry x="1406.5" y="2527" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1402.5" y="2488" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="72" value="Google Authenticator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#FFFFFF;strokeColor=#2D7600;" parent="1" vertex="1">
-                    <mxGeometry x="1406.5" y="2605" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1402.5" y="2566" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="74" value="React" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" parent="1" vertex="1">
                     <mxGeometry x="352" y="1791" width="120" height="60" as="geometry"/>
@@ -247,6 +237,9 @@
                 </mxCell>
                 <mxCell id="82" value="Landing page" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="614" y="1735" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="113" value="ClassValidator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#FFFFFF;strokeColor=#2D7600;" vertex="1" parent="1">
+                    <mxGeometry x="1402.5" y="2644" width="120" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
