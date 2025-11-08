@@ -5,7 +5,6 @@ module.exports = {
     testRegex: ".*\\.(spec|test)\\.ts$",
     coverageDirectory: "coverage",
     testEnvironment: "node",
-    preset: "@shelf/jest-mongodb",
     transform: {
         "^.+\\.(t|j)s$": "ts-jest",
     },

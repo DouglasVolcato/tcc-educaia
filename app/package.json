@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Educational platform",
   "main": "dist/main/index.js",
-  "type": "module",
   "author": "Douglas Volcato",
   "license": "MIT",
   "scripts": {
