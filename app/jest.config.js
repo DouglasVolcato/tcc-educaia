@@ -1,6 +1,6 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-module.exports = {
-    preset: "ts-jest",
+export default {
+    preset: "ts-jest/presets/default-esm",
     testEnvironment: "node",
     testRegex: ".*\\.(spec|test)\\.ts$",
     coverageDirectory: "coverage",
@@ -13,5 +13,5 @@ module.exports = {
         "!**/*index.(t|j)s",
         "!**/*test.(t|j)s",
         "!**/dist/**",
-    ],
+    ]
 };

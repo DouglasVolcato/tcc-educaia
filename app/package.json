@@ -4,6 +4,7 @@
   "description": "Educational platform",
   "main": "dist/main/index.js",
   "author": "Douglas Volcato",
+  "type": "module",
   "license": "MIT",
   "scripts": {
     "start": "tsc && node --env-file=.env dist/main/index.js",
@@ -36,7 +37,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.1.0",
+    "@faker-js/faker": "^9.9.0",
     "@types/cheerio": "^0.22.35",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.2",

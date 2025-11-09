@@ -1,6 +1,6 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-const jestConfig = require("./jest.config");
-module.exports = {
+import jestConfig from "./jest.config";
+export default {
   ...jestConfig,
   testRegex: ".*\\.spec\\.ts$",
 };
