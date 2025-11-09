@@ -28,6 +28,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "node-cron": "^3.0.3",
     "pg": "^8.15.6",
     "prom-client": "^15.1.3",
@@ -58,6 +59,16 @@
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
+  },
+  "_moduleAliases": {
+    "@main/*": "dist/src/main/*",
+    "@tests/*": "dist/src/tests/*",
+    "@db/*": "dist/src/db/*",
+    "@utils/*": "dist/src/utils/*",
+    "@controllers/*": "dist/src/controllers/*",
+    "@views/*": "dist/src/views/*",
+    "@usecases/*": "dist/src/usecases/*"
   }
 }
