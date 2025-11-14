@@ -17,8 +17,9 @@
     "test-coverage": "jest --passWithNoTests --coverage -c jest.unit.config.js"
   },
   "dependencies": {
-    "@langchain/community": "^0.0.40",
-    "@langchain/core": "^0.3.55",
+    "@langchain/community": "^1.0.3",
+    "@langchain/core": "^1.0.5",
+    "@langchain/openai": "^1.1.1",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -53,7 +54,7 @@
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
-    "faker": "^6.6.6",
+    "faker": "^5.5.3",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
