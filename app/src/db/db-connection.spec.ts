@@ -40,44 +40,176 @@ describe("DbConnection", () => {
         jest.clearAllMocks();
     });
 
-    test("Connect should create a new pool with right values", async () => {
-        const envVars = mockEnvVars()
-        const sut = DbConnection
-        await sut.connect()
-        expect(Pool).toHaveBeenCalledTimes(1)
-        expect(Pool).toHaveBeenCalledWith(envVars)
-    })
-
-    test("Connect should connect to database", async () => {
-        const sut = DbConnection
-        await sut.connect()
-        expect(mockConnect).toHaveBeenCalledTimes(1)
-        expect(mockConnect).toHaveBeenCalledWith()
-    })
-
-    test("Should throw if connection throws", async () => {
-        const sut = DbConnection;
-        mockConnect.mockImplementationOnce(() => {
-            throw new Error(FakeData.phrase())
+    describe("Connect", () => {
+        test("Connect should create a new pool with right values", async () => {
+            const envVars = mockEnvVars()
+            const sut = DbConnection
+            await sut.connect()
+            expect(Pool).toHaveBeenCalledTimes(1)
+            expect(Pool).toHaveBeenCalledWith(envVars)
         })
-        expect(async () => await sut.connect()).rejects.toThrow()
+
+        test("Connect should connect to database", async () => {
+            const sut = DbConnection
+            await sut.connect()
+            expect(mockConnect).toHaveBeenCalledTimes(1)
+            expect(mockConnect).toHaveBeenCalledWith()
+        })
+
+        test("Should throw if connection throws", async () => {
+            const sut = DbConnection;
+            mockConnect.mockImplementationOnce(() => {
+                throw new Error(FakeData.phrase())
+            })
+            expect(async () => await sut.connect()).rejects.toThrow()
+        })
+
+        test("Should save the new connection", async () => {
+            const sut = DbConnection;
+            await sut.connect()
+            expect((sut as any).connection).toEqual(mockPoolClient())
+        })
+
+        test("Should not create a new connection is a connection already existed", async () => {
+            const newConnection = FakeData.uuid();
+            const sut = DbConnection;
+            expect((sut as any).connection).toBeUndefined()
+            mockConnect.mockImplementationOnce(() => (newConnection as any))
+            await sut.connect()
+            expect((sut as any).connection).toBe(newConnection)
+            mockConnect.mockImplementationOnce(() => (FakeData.uuid() as any))
+            await sut.connect()
+            expect((sut as any).connection).toBe(newConnection)
+        })
     })
 
-    test("Should save the new connection", async () => {
-        const sut = DbConnection;
-        await sut.connect()
-        expect((sut as any).connection).toEqual(mockPoolClient())
+    describe("Disconnect", () => {
+        test("Should call connection release", async () => {
+            const releaseSpy = jest.fn().mockResolvedValue(undefined);
+            (DbConnection as any).connection = {
+                release: releaseSpy,
+            } as unknown as PoolClient;
+            await DbConnection.disconnect();
+            expect(releaseSpy).toHaveBeenCalledTimes(1);
+            expect(releaseSpy).toHaveBeenCalledWith();
+        })
+
+        test("Should throw if connection throws", async () => {
+            const error = new Error(FakeData.phrase());
+            const releaseSpy = jest.fn().mockRejectedValue(error);
+            (DbConnection as any).connection = {
+                release: releaseSpy,
+            } as unknown as PoolClient;
+            await expect(DbConnection.disconnect()).rejects.toThrow(error);
+        })
     })
 
-    test("Should not create a new connection is a connection already existed", async () => {
-        const newConnection = FakeData.uuid();
-        const sut = DbConnection;
-        expect((sut as any).connection).toBeUndefined()
-        mockConnect.mockImplementationOnce(() => (newConnection as any))
-        await sut.connect()
-        expect((sut as any).connection).toBe(newConnection)
-        mockConnect.mockImplementationOnce(() => (FakeData.uuid() as any))
-        await sut.connect()
-        expect((sut as any).connection).toBe(newConnection)
+    describe("StartTransaction", () => {
+        test("Should call connection query with begin", async () => {
+            const querySpy = jest.fn().mockResolvedValue(undefined);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await DbConnection.startTransaction();
+            expect(querySpy).toHaveBeenCalledTimes(1);
+            expect(querySpy).toHaveBeenCalledWith("BEGIN");
+        })
+
+        test("Should throw if connection throws", async () => {
+            const error = new Error(FakeData.phrase());
+            const querySpy = jest.fn().mockRejectedValue(error);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await expect(DbConnection.startTransaction()).rejects.toThrow(error);
+        })
+    })
+
+    describe("Commit", () => {
+        test("Should call connection query with commit", async () => {
+            const querySpy = jest.fn().mockResolvedValue(undefined);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await DbConnection.commit();
+            expect(querySpy).toHaveBeenCalledTimes(1);
+            expect(querySpy).toHaveBeenCalledWith("COMMIT");
+        })
+
+        test("Should throw if connection throws", async () => {
+            const error = new Error(FakeData.phrase());
+            const querySpy = jest.fn().mockRejectedValue(error);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await expect(DbConnection.commit()).rejects.toThrow(error);
+        })
+    })
+
+    describe("Rollback", () => {
+        test("Should call connection query with rollback", async () => {
+            const querySpy = jest.fn().mockResolvedValue(undefined);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await DbConnection.rollback();
+            expect(querySpy).toHaveBeenCalledTimes(1);
+            expect(querySpy).toHaveBeenCalledWith("ROLLBACK");
+        })
+
+        test("Should throw if connection throws", async () => {
+            const error = new Error(FakeData.phrase());
+            const querySpy = jest.fn().mockRejectedValue(error);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await expect(DbConnection.rollback()).rejects.toThrow(error);
+        })
+    })
+
+    describe("Query", () => {
+        test("Should call connection query with received params", async () => {
+            const querySpy = jest.fn().mockResolvedValue({ rows: [] });
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            const queryParams = {
+                sql: FakeData.phrase(),
+                params: [FakeData.numberInteger(), FakeData.word()],
+            };
+            await DbConnection.query(queryParams);
+            expect(querySpy).toHaveBeenCalledTimes(1);
+            expect(querySpy).toHaveBeenCalledWith(queryParams.sql, queryParams.params);
+        })
+
+        test("Should throw if connection throws", async () => {
+            const error = new Error(FakeData.phrase());
+            const querySpy = jest.fn().mockRejectedValue(error);
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            await expect(
+                DbConnection.query({
+                    sql: FakeData.phrase(),
+                    params: [FakeData.word()],
+                })
+            ).rejects.toThrow(error);
+        })
+
+        test("Should return query rows", async () => {
+            const rows = [
+                { id: FakeData.uuid() },
+                { id: FakeData.uuid() },
+            ];
+            const querySpy = jest.fn().mockResolvedValue({ rows });
+            (DbConnection as any).connection = {
+                query: querySpy,
+            } as unknown as PoolClient;
+            const result = await DbConnection.query({
+                sql: FakeData.phrase(),
+                params: [FakeData.word()],
+            });
+            expect(result).toEqual(rows);
+        })
     })
 })

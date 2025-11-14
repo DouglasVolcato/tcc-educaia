@@ -15,4 +15,31 @@ export class DbConnection {
             DbConnection.connection = await databasePool.connect();
         }
     }
+
+    public static async disconnect() {
+        await DbConnection.connection.release();
+    }
+
+    public static async startTransaction() {
+        await DbConnection.connection.query("BEGIN");
+    }
+
+    public static async commit() {
+        await DbConnection.connection.query("COMMIT");
+    }
+
+    public static async rollback() {
+        await DbConnection.connection.query("ROLLBACK");
+    }
+
+    public static async query(query: {
+        sql: string;
+        params: any[];
+    }): Promise<any[]> {
+        const result = await DbConnection.connection.query(
+            query.sql,
+            query.params
+        );
+        return result.rows;
+    }
 }
