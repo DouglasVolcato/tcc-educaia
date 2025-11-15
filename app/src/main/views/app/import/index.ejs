@@ -1,0 +1,84 @@
+<%- include('../partials/layout-start', { pageTitle: 'Importar conhecimento', user, activePage, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-4" id="ai-content">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-1">Importar conteúdo para a IA</h1>
+        <p class="text-muted mb-0">Cole seus resumos ou materiais de estudo e deixe a inteligência artificial sugerir flashcards.</p>
+      </div>
+      <a class="btn btn-outline-secondary" href="/app/decks">
+        <i class="bi bi-arrow-left me-1"></i>Voltar aos baralhos
+      </a>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-1">Adicionar novo conteúdo</h2>
+            <p class="text-muted small mb-3">Selecione um baralho e forneça o texto base. A IA irá gerar perguntas e respostas automaticamente.</p>
+            <form action="/app/import" method="post" data-async>
+              <div class="mb-3">
+                <label class="form-label" for="import-deck">Enviar para o baralho</label>
+                <select id="import-deck" class="form-select" name="deckId" required>
+                  <option value="">Selecione um baralho</option>
+                  <% decks.forEach(function(deck) { %>
+                    <option value="<%= deck.id %>"><%= deck.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="import-title">Tema ou título</label>
+                <input type="text" class="form-control" id="import-title" name="title" placeholder="Ex.: Fotossíntese" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="import-content">Conteúdo base</label>
+                <textarea class="form-control" id="import-content" name="content" rows="8" placeholder="Cole aqui resumos, apontamentos ou qualquer conteúdo relevante para gerar flashcards." required></textarea>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="import-tone">Estilo desejado</label>
+                  <select id="import-tone" class="form-select" name="tone">
+                    <option value="objetivo">Objetivo</option>
+                    <option value="descontraido">Descontraído</option>
+                    <option value="profundo">Profundo</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="import-depth">Profundidade</label>
+                  <select id="import-depth" class="form-select" name="depth">
+                    <option value="basico">Básico</option>
+                    <option value="intermediario" selected>Intermediário</option>
+                    <option value="avancado">Avançado</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-check form-switch mt-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="import-auto" name="autoReview" checked />
+                <label class="form-check-label" for="import-auto">Adicionar flashcards diretamente ao baralho após revisão rápida</label>
+              </div>
+              <button type="submit" class="btn btn-primary mt-4" data-loading-button>
+                <i class="bi bi-cloud-arrow-up me-1"></i>Processar com IA
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h5 mb-0">Sugestões da IA</h2>
+              <button class="btn btn-sm btn-outline-secondary" type="button" hx-get="/app/import/examples" hx-target="#ai-suggestions" hx-swap="outerHTML">
+                <i class="bi bi-arrow-repeat me-1"></i>Atualizar exemplos
+              </button>
+            </div>
+            <p class="text-muted small">Revise as sugestões antes de salvar. Ajuste o texto conforme necessário.</p>
+            <div id="ai-suggestions">
+              <%- include('./partials/suggestions', { suggestions }) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('../partials/layout-end') %>

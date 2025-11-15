@@ -1,0 +1,68 @@
+<div id="learning-card" class="card border-0 shadow-sm" data-card-index="<%= index %>">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <span class="badge text-bg-primary">Cartão <%= index + 1 %> de <%= session.cards.length %></span>
+      <div class="d-flex gap-2">
+        <span class="badge text-bg-secondary"><i class="bi bi-clock-history me-1"></i><%= session.stats.remaining %> restantes</span>
+        <span class="badge text-bg-success"><i class="bi bi-bolt me-1"></i><%= session.stats.masteredPercentage * 100 %>% domínio</span>
+      </div>
+    </div>
+    <h2 class="h5">Pergunta</h2>
+    <p class="lead mb-3"><%= card.question %></p>
+    <div class="alert alert-warning d-flex align-items-start gap-2">
+      <i class="bi bi-lightbulb"></i>
+      <div>
+        <strong>Dica:</strong> <%= card.hint %>
+      </div>
+    </div>
+    <button class="btn btn-outline-primary" type="button" data-action="toggle-answer" data-answer-target="card-answer-<%= card.id %>">
+      <i class="bi bi-eye me-1"></i>Revelar resposta
+    </button>
+    <div class="collapse mt-3" id="card-answer-<%= card.id %>">
+      <h3 class="h6">Resposta</h3>
+      <p class="mb-2"><%= card.answer %></p>
+      <div class="d-flex flex-wrap gap-2">
+        <% card.tags.forEach(function(tag) { %>
+          <span class="badge text-bg-light"><%= tag %></span>
+        <% }) %>
+      </div>
+    </div>
+    <hr class="my-4" />
+    <p class="text-muted mb-3">Como foi sua recordação?</p>
+    <div class="d-flex flex-column flex-md-row gap-2">
+      <button
+        class="btn btn-outline-danger flex-fill"
+        type="button"
+        data-difficulty="hard"
+        hx-get="/app/learning/next?index=<%= index + 1 %>"
+        hx-vals='{"difficulty":"hard"}'
+        hx-target="#learning-card"
+        hx-swap="outerHTML"
+      >
+        <i class="bi bi-emoji-frown me-1"></i>Difícil
+      </button>
+      <button
+        class="btn btn-outline-warning flex-fill"
+        type="button"
+        data-difficulty="medium"
+        hx-get="/app/learning/next?index=<%= index + 1 %>"
+        hx-vals='{"difficulty":"medium"}'
+        hx-target="#learning-card"
+        hx-swap="outerHTML"
+      >
+        <i class="bi bi-emoji-neutral me-1"></i>Médio
+      </button>
+      <button
+        class="btn btn-outline-success flex-fill"
+        type="button"
+        data-difficulty="easy"
+        hx-get="/app/learning/next?index=<%= index + 1 %>"
+        hx-vals='{"difficulty":"easy"}'
+        hx-target="#learning-card"
+        hx-swap="outerHTML"
+      >
+        <i class="bi bi-emoji-smile me-1"></i>Fácil
+      </button>
+    </div>
+  </div>
+</div>

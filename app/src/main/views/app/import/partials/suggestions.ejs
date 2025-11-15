@@ -1,0 +1,21 @@
+<div id="ai-suggestions" class="d-grid gap-3">
+  <% if (!suggestions || !suggestions.length) { %>
+    <div class="alert alert-info mb-0">Nenhuma sugestão disponível no momento. Envie conteúdo para gerar novos flashcards.</div>
+  <% } else { %>
+    <% suggestions.forEach(function(item, index) { %>
+      <div class="border rounded-3 p-3 bg-body-secondary">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="badge text-bg-primary">Sugestão <%= index + 1 %></span>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" type="button"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-outline-secondary" type="button"><i class="bi bi-check2-circle"></i></button>
+          </div>
+        </div>
+        <h3 class="h6 mt-3">Pergunta</h3>
+        <p class="mb-2"><%= item.question %></p>
+        <h3 class="h6">Resposta sugerida</h3>
+        <p class="mb-0 text-muted"><%= item.answer %></p>
+      </div>
+    <% }) %>
+  <% } %>
+</div>

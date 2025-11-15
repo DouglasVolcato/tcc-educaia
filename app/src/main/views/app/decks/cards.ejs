@@ -1,0 +1,161 @@
+<%- include('../partials/layout-start', { pageTitle: pageTitle ?? 'Cartões', user, activePage, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-1"><%= deck?.name ?? 'Baralho desconhecido' %></h1>
+        <p class="text-muted mb-0">Gerencie os flashcards do baralho e acompanhe o status de revisão.</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" href="/app/decks">
+          <i class="bi bi-arrow-left me-1"></i>Voltar aos baralhos
+        </a>
+        <a class="btn btn-primary" href="#add-card">
+          <i class="bi bi-plus-circle me-1"></i>Novo flashcard
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted">Resumo</h2>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span>Total de cartões</span>
+              <span class="fw-semibold"><%= cards.length %></span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <span>Para revisar hoje</span>
+              <span class="badge text-bg-danger rounded-pill"><%= deck?.dueToday ?? 0 %></span>
+            </div>
+            <div class="mt-4">
+              <p class="small text-muted mb-1">Distribuição de dificuldade</p>
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: 40%"></div>
+                <div class="progress-bar bg-warning" style="width: 35%"></div>
+                <div class="progress-bar bg-danger" style="width: 25%"></div>
+              </div>
+              <div class="d-flex justify-content-between small text-muted mt-2">
+                <span>Fácil</span>
+                <span>Médio</span>
+                <span>Difícil</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card border-0 shadow-sm mt-4">
+          <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted">Sugestões da IA</h2>
+            <p class="text-muted small">Importe conteúdo bruto e deixe a IA gerar cartões contextualizados.</p>
+            <a class="btn btn-outline-primary w-100" href="/app/import?deckId=<%= deck?.id %>">
+              <i class="bi bi-magic me-1"></i>Gerar com IA
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm" id="add-card">
+          <div class="card-body">
+            <h2 class="h5">Adicionar novo flashcard</h2>
+            <p class="text-muted small">Use linguagem clara e objetiva para facilitar o entendimento durante as revisões.</p>
+            <form action="/app/decks/<%= deck?.id %>/cards" method="post" data-async>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="card-front">Pergunta</label>
+                  <textarea class="form-control" id="card-front" name="front" rows="3" placeholder="Pergunta ou gatilho do flashcard" required></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="card-back">Resposta</label>
+                  <textarea class="form-control" id="card-back" name="back" rows="3" placeholder="Resposta objetiva que será revelada" required></textarea>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="card-tags">Tags</label>
+                  <input type="text" class="form-control" id="card-tags" name="tags" placeholder="Genética, Ecologia" />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="card-difficulty">Dificuldade</label>
+                  <select class="form-select" id="card-difficulty" name="difficulty">
+                    <option value="easy">Fácil</option>
+                    <option value="medium">Médio</option>
+                    <option value="hard">Difícil</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="card-source">Fonte</label>
+                  <input type="text" class="form-control" id="card-source" name="source" placeholder="Aula, livro, etc." />
+                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-outline-secondary" type="reset">Limpar</button>
+                <button class="btn btn-primary" type="submit" data-loading-button>Salvar flashcard</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h5 mb-0">Flashcards do baralho</h2>
+              <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" style="width: 160px;">
+                  <option value="all">Todos os status</option>
+                  <option value="due">Para revisar</option>
+                  <option value="mastered">Dominados</option>
+                </select>
+                <input type="search" class="form-control form-control-sm" placeholder="Buscar" style="width: 200px;" />
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">Pergunta</th>
+                    <th scope="col">Tags</th>
+                    <th scope="col">Última revisão</th>
+                    <th scope="col" class="text-center">Dificuldade</th>
+                    <th scope="col" class="text-end">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (!cards.length) { %>
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">Nenhum flashcard cadastrado ainda.</td>
+                    </tr>
+                  <% } else { %>
+                    <% cards.forEach(function(card) { %>
+                      <tr>
+                        <td>
+                          <span class="fw-semibold"><%= card.front %></span>
+                          <p class="mb-0 small text-muted"><%= card.back %></p>
+                        </td>
+                        <td>
+                          <% card.tags.forEach(function(tag) { %>
+                            <span class="badge text-bg-light me-1"><%= tag %></span>
+                          <% }) %>
+                        </td>
+                        <td><%= card.lastReviewed %></td>
+                        <td class="text-center">
+                          <span class="badge text-bg-<% if (card.ease === 'Fácil') { %>success<% } else if (card.ease === 'Médio') { %>warning text-dark<% } else { %>danger<% } %>">
+                            <%= card.ease %>
+                          </span>
+                        </td>
+                        <td class="text-end">
+                          <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-secondary" type="button"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-secondary" type="button"><i class="bi bi-arrow-repeat"></i></button>
+                            <button class="btn btn-outline-danger" type="button"><i class="bi bi-trash"></i></button>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('../partials/layout-end') %>

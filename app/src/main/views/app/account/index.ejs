@@ -1,0 +1,129 @@
+<%- include('../partials/layout-start', { pageTitle: 'Minha conta', user, activePage, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-1">Minha conta</h1>
+        <p class="text-muted mb-0">Atualize seus dados pessoais, preferências de IA e notificações.</p>
+      </div>
+      <button class="btn btn-outline-danger" type="button">
+        <i class="bi bi-box-arrow-right me-1"></i>Sair da conta
+      </button>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body text-center">
+            <div class="avatar rounded-circle bg-primary-subtle text-primary-emphasis d-inline-flex justify-content-center align-items-center mb-3" style="width: 96px; height: 96px;">
+              <% if (user?.avatarUrl) { %>
+                <img src="<%= user.avatarUrl %>" alt="Avatar" class="img-fluid rounded-circle" />
+              <% } else if (user?.name) { %>
+                <span class="fs-2 fw-semibold"><%= user.name[0] %></span>
+              <% } else { %>
+                <i class="bi bi-person fs-2"></i>
+              <% } %>
+            </div>
+            <h2 class="h5 mb-0"><%= user?.name %></h2>
+            <p class="text-muted"><%= user?.email %></p>
+            <p class="text-muted small">Fuso horário atual: <%= preferences.timezone %></p>
+            <button class="btn btn-outline-primary btn-sm" type="button">Alterar foto</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Informações pessoais</h2>
+            <form action="/app/account" method="post" data-async>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="account-name">Nome completo</label>
+                  <input type="text" class="form-control" id="account-name" name="name" value="<%= user?.name %>" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="account-email">E-mail</label>
+                  <input type="email" class="form-control" id="account-email" name="email" value="<%= user?.email %>" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="account-timezone">Fuso horário</label>
+                  <input type="text" class="form-control" id="account-timezone" name="timezone" value="<%= preferences.timezone %>" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="account-goal">Meta semanal (minutos)</label>
+                  <input type="number" class="form-control" id="account-goal" name="weeklyGoal" value="<%= preferences.weeklyGoal %>" />
+                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-outline-secondary" type="reset">Descartar</button>
+                <button class="btn btn-primary" type="submit" data-loading-button>Salvar alterações</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Preferências da IA</h2>
+            <form action="/app/account" method="post" data-async>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="ai-tone">Tom desejado</label>
+                  <select class="form-select" id="ai-tone" name="tone">
+                    <option value="objetivo" <%= preferences.aiPreferences.tone === 'Objetivo' ? 'selected' : '' %>>Objetivo</option>
+                    <option value="motivacional">Motivacional</option>
+                    <option value="detalhado">Detalhado</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="ai-depth">Profundidade</label>
+                  <select class="form-select" id="ai-depth" name="depth">
+                    <option value="basico">Básico</option>
+                    <option value="intermediario" <%= preferences.aiPreferences.depth === 'Intermediário' ? 'selected' : '' %>>Intermediário</option>
+                    <option value="avancado">Avançado</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="ai-creativity">Criatividade</label>
+                  <input type="range" class="form-range" id="ai-creativity" min="0" max="1" step="0.1" value="<%= preferences.aiPreferences.creativity %>" />
+                  <div class="d-flex justify-content-between small text-muted">
+                    <span>Conservador</span>
+                    <span>Equilibrado</span>
+                    <span>Criativo</span>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-outline-secondary" type="reset">Redefinir</button>
+                <button class="btn btn-primary" type="submit" data-loading-button>Atualizar preferências</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Notificações</h2>
+            <form action="/app/account" method="post" data-async>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="notify-daily" name="dailyReminder" <%= preferences.notifications.dailyReminder ? 'checked' : '' %> />
+                <label class="form-check-label" for="notify-daily">Lembrete diário de revisão</label>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="notify-ai" name="aiSuggestions" <%= preferences.notifications.aiSuggestions ? 'checked' : '' %> />
+                <label class="form-check-label" for="notify-ai">Receber sugestões de novos cards gerados pela IA</label>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="notify-summary" name="reviewSummary" <%= preferences.notifications.reviewSummary ? 'checked' : '' %> />
+                <label class="form-check-label" for="notify-summary">Resumo semanal de desempenho</label>
+              </div>
+              <div class="d-flex justify-content-end gap-2 mt-4">
+                <button class="btn btn-outline-secondary" type="reset">Desfazer</button>
+                <button class="btn btn-primary" type="submit" data-loading-button>Salvar notificações</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('../partials/layout-end') %>

@@ -1,0 +1,65 @@
+<%- include('./partials/layout-start', { pageTitle: 'Criar conta', showNavbar: false, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-xl-5">
+        <div class="text-center mb-4">
+          <a class="navbar-brand fw-bold text-primary fs-3" href="/app/login">
+            <i class="bi bi-lightning-charge-fill me-2"></i>EducaIA
+          </a>
+          <p class="text-muted mt-2">Personalize sua jornada de estudos com flashcards inteligentes.</p>
+        </div>
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <form action="/app/sign-up" method="post" data-async>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="signup-name">Nome completo</label>
+                  <input type="text" class="form-control" id="signup-name" name="name" required placeholder="Maria Eduarda" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="signup-role">Objetivo</label>
+                  <select id="signup-role" name="role" class="form-select" required>
+                    <option value="">Selecione</option>
+                    <option value="enem">Preparação ENEM</option>
+                    <option value="vestibular">Vestibular</option>
+                    <option value="idiomas">Idiomas</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="signup-email">E-mail</label>
+                  <input type="email" class="form-control" id="signup-email" name="email" required placeholder="nome@email.com" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="signup-password">Senha</label>
+                  <input type="password" class="form-control" id="signup-password" name="password" required placeholder="Crie uma senha" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="signup-password-confirm">Confirmar senha</label>
+                  <input type="password" class="form-control" id="signup-password-confirm" name="passwordConfirm" required placeholder="Repita a senha" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="signup-goal">Meta semanal (minutos)</label>
+                  <input type="number" min="30" step="15" class="form-control" id="signup-goal" name="weeklyGoal" value="210" />
+                </div>
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="true" id="terms" required />
+                    <label class="form-check-label" for="terms">
+                      Concordo com os <a href="#">termos de uso</a> e <a href="#">política de privacidade</a>.
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-primary w-100 mt-4" type="submit" data-loading-button>
+                Criar minha conta gratuita
+              </button>
+            </form>
+            <p class="text-center text-muted mt-3 mb-0">
+              Já possui conta? <a href="/app/login" class="fw-semibold">Entre agora</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('./partials/layout-end') %>

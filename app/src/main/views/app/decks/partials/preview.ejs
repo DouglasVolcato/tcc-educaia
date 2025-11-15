@@ -1,0 +1,88 @@
+<% if (!deck) { %>
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-collection fs-1 text-primary mb-3"></i>
+      <h2 class="h5">Selecione um baralho para visualizar detalhes</h2>
+      <p class="text-muted">Você poderá acompanhar progresso, revisar cartões e acessar ações rápidas.</p>
+    </div>
+  </div>
+<% } else { %>
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+          <h2 class="h4 mb-1"><%= deck.name %></h2>
+          <p class="text-muted mb-0"><%= deck.description %></p>
+        </div>
+        <div class="text-md-end">
+          <span class="badge text-bg-<%= deck.color %> me-2"><i class="bi bi-lightning-charge me-1"></i><%= deck.mastered %> dominados</span>
+          <span class="badge text-bg-danger"><%= deck.dueToday %> revisar hoje</span>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 h-100 bg-body-secondary">
+            <h3 class="small text-uppercase text-muted mb-1">Total de cartões</h3>
+            <p class="h4 mb-0"><%= deck.totalCards %></p>
+            <small class="text-muted"><%= deck.newCards %> novos • <%= deck.reviewCards %> revisão</small>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 h-100">
+            <h3 class="small text-uppercase text-muted mb-1">Último estudo</h3>
+            <p class="h5 mb-0"><%= deck.lastStudied %></p>
+            <small class="text-muted">Meta diária personalizada</small>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 h-100">
+            <h3 class="small text-uppercase text-muted mb-1">Próximos passos</h3>
+            <p class="mb-2">Revise cartões urgentes e crie novos via IA.</p>
+            <div class="d-flex gap-2">
+              <a class="btn btn-outline-primary btn-sm" href="/app/decks/<%= deck.id %>/cards">
+                <i class="bi bi-card-text me-1"></i>Gerenciar cartões
+              </a>
+              <a class="btn btn-primary btn-sm" href="/app/import?deckId=<%= deck.id %>">
+                <i class="bi bi-stars me-1"></i>Adicionar com IA
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4" />
+      <div class="row g-3">
+        <div class="col-md-6">
+          <h3 class="h6 mb-3">Resumo de revisão</h3>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+              Cartões atrasados
+              <span class="badge text-bg-danger rounded-pill"><%= Math.max(deck.dueToday - 5, 0) %></span>
+            </li>
+            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+              Revisões concluídas esta semana
+              <span class="badge text-bg-success rounded-pill"><%= Math.floor(deck.mastered / 2) %></span>
+            </li>
+            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+              Sugestões da IA aguardando revisão
+              <span class="badge text-bg-primary rounded-pill"><%= Math.max(deck.newCards - 2, 1) %></span>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h3 class="h6 mb-3">Atalhos rápidos</h3>
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-secondary" href="/app/learning?deckId=<%= deck.id %>">
+              <i class="bi bi-clock-history me-1"></i>Iniciar revisão focada
+            </a>
+            <a class="btn btn-outline-secondary" href="/app/decks/<%= deck.id %>/cards#add-card">
+              <i class="bi bi-plus-circle me-1"></i>Adicionar flashcard manualmente
+            </a>
+            <a class="btn btn-outline-secondary" href="/app/import?deckId=<%= deck.id %>#ai-content">
+              <i class="bi bi-magic me-1"></i>Gerar cartões com IA
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>

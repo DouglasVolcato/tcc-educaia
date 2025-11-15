@@ -1,0 +1,51 @@
+<%- include('../partials/layout-start', { pageTitle: 'Sessão de revisão', user, activePage, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-4">
+    <div class="row g-4">
+      <div class="col-lg-4 order-lg-2">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Resumo da sessão</h2>
+            <div class="d-grid gap-3">
+              <div class="border rounded-3 p-3 bg-body-secondary">
+                <p class="small text-muted mb-1">Cartões restantes</p>
+                <p class="h4 mb-0"><%= session.stats.remaining %></p>
+                <small class="text-muted"><%= session.deckName %></small>
+              </div>
+              <div class="border rounded-3 p-3">
+                <p class="small text-muted mb-1">Revisões de hoje</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Para revisar</span>
+                  <span class="badge text-bg-danger"><%= session.stats.dueToday %></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                  <span>Novos cartões</span>
+                  <span class="badge text-bg-primary"><%= session.stats.newCards %></span>
+                </div>
+              </div>
+              <div class="border rounded-3 p-3">
+                <p class="small text-muted mb-1">Sequência de dias</p>
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-fire text-warning fs-4"></i>
+                  <div>
+                    <p class="h4 mb-0"><%= session.stats.streak %> dias</p>
+                    <small class="text-muted">Continue firme!</small>
+                  </div>
+                </div>
+              </div>
+              <div class="border rounded-3 p-3">
+                <p class="small text-muted mb-1">Progresso do baralho</p>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" style="width: <%= session.stats.masteredPercentage * 100 %>%"></div>
+                </div>
+                <small class="text-muted d-block mt-2"><%= Math.round(session.stats.masteredPercentage * 100) %>% de domínio geral</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8 order-lg-1">
+        <%- include('./partials/card', { card: session.cards[0], index: 0, session }) %>
+      </div>
+    </div>
+  </div>
+<%- include('../partials/layout-end') %>

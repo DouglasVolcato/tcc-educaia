@@ -1,0 +1,58 @@
+<%- include('./partials/layout-start', { pageTitle: 'Entrar', showNavbar: false, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="text-center mb-4">
+          <a class="navbar-brand fw-bold text-primary fs-3" href="/app/login">
+            <i class="bi bi-lightning-charge-fill me-2"></i>EducaIA
+          </a>
+          <p class="text-muted mt-2">Faça login para acessar seus estudos personalizados.</p>
+        </div>
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <form action="/app/login" method="post" data-async>
+              <div class="mb-3">
+                <label for="login-email" class="form-label">E-mail</label>
+                <input type="email" class="form-control" id="login-email" name="email" required placeholder="nome@email.com" />
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label for="login-password" class="form-label mb-0">Senha</label>
+                  <a href="#" class="small">Esqueci minha senha</a>
+                </div>
+                <input type="password" class="form-control" id="login-password" name="password" required placeholder="••••••••" />
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="true" id="remember-me" name="remember" checked />
+                <label class="form-check-label" for="remember-me">Lembrar de mim</label>
+              </div>
+              <button type="submit" class="btn btn-primary w-100" data-loading-button>
+                Entrar na plataforma
+              </button>
+            </form>
+            <div class="mt-4">
+              <p class="text-muted text-center small mb-3">Ou continue com</p>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary flex-fill" type="button">
+                  <i class="bi bi-google me-2"></i>Google
+                </button>
+                <button class="btn btn-outline-secondary flex-fill" type="button">
+                  <i class="bi bi-github me-2"></i>GitHub
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="text-center text-muted mt-3">
+          Ainda não tem conta?
+          <a href="/app/sign-up" class="fw-semibold">Crie sua conta gratuitamente</a>
+        </p>
+        <div class="text-center mt-3">
+          <button class="btn btn-link text-decoration-none" type="button" data-action="simulate-error">
+            <i class="bi bi-bug me-1"></i>Simular erro da API
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('./partials/layout-end') %>
