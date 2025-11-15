@@ -1,0 +1,103 @@
+<%- include('../partials/head', { title }) %>
+  <body>
+    <div class="d-flex flex-column min-vh-100">
+      <%- include('../partials/navbar', { active: 'decks', user }) %>
+      <main class="flex-grow-1">
+        <div class="container d-flex flex-column gap-4">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/app/decks">Baralhos</a></li>
+              <li class="breadcrumb-item"><a href="/app/decks/<%= deck.id %>/cards"><%= deck.name %></a></li>
+              <li class="breadcrumb-item active" aria-current="page">Adicionar conteúdo</li>
+            </ol>
+          </nav>
+
+          <section class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-md-5">
+              <div class="row g-4">
+                <div class="col-lg-7">
+                  <span class="badge bg-primary-subtle text-primary pill mb-3">Gerar flashcards com IA</span>
+                  <h1 class="h3 fw-bold mb-3">Cole seu conteúdo e deixe a IA fazer o restante</h1>
+                  <p class="text-secondary mb-4">
+                    Insira textos, resumos, artigos ou anotações. Nossa inteligência artificial sugere flashcards com base no contexto e objetivos informados.
+                  </p>
+                  <form
+                    class="d-grid gap-3"
+                    hx-post="/api/decks/<%= deck.id %>/generate"
+                    hx-target="#generationPreview"
+                    hx-swap="innerHTML"
+                  >
+                    <div>
+                      <label class="form-label fw-semibold" for="contentSource">Conteúdo de referência</label>
+                      <textarea
+                        class="form-control import-textarea"
+                        id="contentSource"
+                        name="content"
+                        placeholder="Cole aqui seu texto, resumo ou anotações"
+                        required
+                      ></textarea>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="flashcardGoal">Objetivo</label>
+                        <input class="form-control" type="text" id="flashcardGoal" name="goal" placeholder="Ex.: memorizar fórmulas" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="tone">Nível de detalhe</label>
+                        <select class="form-select" id="tone" name="tone">
+                          <option value="concise">Resumido</option>
+                          <option value="standard" selected>Equilibrado</option>
+                          <option value="deep">Detalhado</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="true" id="createImmediately" name="createImmediately" />
+                      <label class="form-check-label" for="createImmediately">
+                        Criar flashcards automaticamente ao finalizar a geração
+                      </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" data-loading-button>
+                      <span data-loading-label>Gerar sugestão</span>
+                      <span class="d-none" data-loading-spinner>
+                        <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                        <span class="ms-2">Processando com IA...</span>
+                      </span>
+                    </button>
+                  </form>
+                </div>
+                <div class="col-lg-5">
+                  <div class="border rounded-4 p-4 bg-light h-100 d-flex flex-column gap-3">
+                    <h2 class="h6 text-uppercase text-secondary fw-semibold">Dicas para melhores resultados</h2>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+                      <% suggestions.forEach(function(tip) { %>
+                        <li class="d-flex gap-3">
+                          <i class="bi bi-stars text-primary fs-4"></i>
+                          <p class="text-secondary mb-0"><%= tip %></p>
+                        </li>
+                      <% }) %>
+                    </ul>
+                    <div class="border-top pt-3 mt-auto">
+                      <p class="text-secondary small mb-1"><i class="bi bi-info-circle me-1"></i> O baralho selecionado</p>
+                      <p class="fw-semibold mb-0"><%= deck.name %> • <%= deck.totalCards %> cartas</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="generationPreview" class="d-flex flex-column gap-3">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4 text-center text-secondary">
+                <i class="bi bi-magic fs-1 text-primary mb-3 d-block"></i>
+                <p class="mb-0">Os flashcards gerados aparecerão aqui para revisão antes de serem adicionados ao baralho.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+      <%- include('../partials/footer') %>
+    </div>
+    <%- include('../partials/feedback') %>
+  <%- include('../partials/scripts') %>
