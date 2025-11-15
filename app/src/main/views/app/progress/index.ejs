@@ -1,0 +1,114 @@
+<%- include('../partials/layout-start', { pageTitle: 'Indicadores', user, activePage, bodyClass: 'bg-body-tertiary' }) %>
+  <div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-1">Indicadores de desempenho</h1>
+        <p class="text-muted mb-0">Acompanhe sua evolução e descubra onde focar nos próximos estudos.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" type="button">
+          <i class="bi bi-download me-1"></i>Exportar relatório
+        </button>
+        <button class="btn btn-primary" type="button">
+          <i class="bi bi-lightning-charge me-1"></i>Recomendações da IA
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <p class="small text-muted mb-1">Sequência de estudos</p>
+            <p class="display-6 mb-0"><%= progress.streak %> dias</p>
+            <small class="text-success fw-semibold">+2 dias vs. semana passada</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <p class="small text-muted mb-1">Cartões dominados</p>
+            <p class="display-6 mb-0"><%= progress.masteredCards %></p>
+            <small class="text-muted">de <%= progress.totalCards %> cartões ativos</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <p class="small text-muted mb-1">Revisões pendentes hoje</p>
+            <p class="display-6 mb-0 text-danger"><%= progress.dueToday %></p>
+            <small class="text-muted">Distribuídos em <%= progress.totalDecks %> baralhos</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <p class="small text-muted mb-1">Cartões gerados pela IA</p>
+            <p class="display-6 mb-0 text-primary"><%= progress.aiGeneratedCards %></p>
+            <small class="text-muted">Desde o início do ciclo</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h5 mb-0">Atividade semanal</h2>
+              <span class="badge text-bg-secondary">Meta: <%= progress.weeklyMinutes %> min</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-borderless align-middle mb-0">
+                <thead>
+                  <tr class="text-muted small">
+                    <th>Dia</th>
+                    <th>Revisões</th>
+                    <th>Minutos</th>
+                    <th class="text-end">Intensidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% progress.weeklyPerformance.forEach(function(day) { %>
+                    <tr>
+                      <td class="fw-semibold"><%= day.label %></td>
+                      <td><%= day.reviews %></td>
+                      <td><%= day.minutes %></td>
+                      <td class="text-end">
+                        <div class="progress" style="height: 6px;">
+                          <div class="progress-bar bg-primary" style="width: <%= Math.min(Math.round((day.reviews / 60) * 100), 100) %>%"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Próximas revisões</h2>
+            <div class="d-grid gap-3">
+              <% progress.upcomingReviews.forEach(function(item) { %>
+                <div class="border rounded-3 p-3 d-flex justify-content-between align-items-start">
+                  <div>
+                    <p class="fw-semibold mb-1"><%= item.name %></p>
+                    <small class="text-muted">Próxima sessão: <%= item.nextSession %></small>
+                  </div>
+                  <span class="badge text-bg-danger"><%= item.due %> cartões</span>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('../partials/layout-end') %>
