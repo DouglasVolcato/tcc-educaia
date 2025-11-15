@@ -1,0 +1,304 @@
+<%- include('../partials/head', { title }) %>
+  <body>
+    <div class="d-flex flex-column min-vh-100">
+      <%- include('../partials/navbar', { active: 'decks', user }) %>
+      <main class="flex-grow-1">
+        <div class="container d-flex flex-column gap-4">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/app/decks">Baralhos</a></li>
+              <li class="breadcrumb-item active" aria-current="page"><%= deck.name %></li>
+            </ol>
+          </nav>
+
+          <section class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-md-5">
+              <div class="row g-4 align-items-start">
+                <div class="col-lg-8">
+                  <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between mb-3">
+                    <div>
+                      <span class="badge bg-primary-subtle text-primary pill mb-2"><%= deck.subject %></span>
+                      <h1 class="h3 fw-bold mb-1"><%= deck.name %></h1>
+                      <p class="text-secondary mb-0"><%= deck.description %></p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <a class="btn btn-primary" href="/app/review">
+                        <i class="bi bi-lightning-charge-fill me-2"></i> Começar revisão
+                      </a>
+                      <a class="btn btn-outline-primary" href="/app/decks/<%= deck.id %>/import">
+                        <i class="bi bi-magic me-2"></i> Criar com IA
+                      </a>
+                      <button class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#deckSettings" aria-controls="deckSettings">
+                        <i class="bi bi-sliders me-2"></i> Configurações
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="bg-body-tertiary rounded-4 p-3 h-100">
+                        <span class="text-secondary small text-uppercase">Cartas</span>
+                        <p class="fs-4 fw-bold mb-0"><%= deck.totalCards %></p>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="bg-body-tertiary rounded-4 p-3 h-100">
+                        <span class="text-secondary small text-uppercase">Para revisar</span>
+                        <p class="fs-4 fw-bold mb-0 text-warning"><%= deck.dueCards %></p>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="bg-body-tertiary rounded-4 p-3 h-100">
+                        <span class="text-secondary small text-uppercase">Progresso</span>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1 progress-bar-rounded" role="progressbar" aria-valuenow="<%= deck.progress %>" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bg-primary" style="width: <%= deck.progress %>%"></div>
+                          </div>
+                          <span class="fw-semibold"><%= deck.progress %>%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="border rounded-4 p-4 h-100 bg-light">
+                    <h2 class="h6 text-uppercase text-secondary fw-semibold">Ações rápidas</h2>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
+                      <li class="d-flex align-items-start gap-3">
+                        <i class="bi bi-magic text-primary fs-4"></i>
+                        <div>
+                          <p class="fw-semibold mb-1">Gerar novas cartas</p>
+                          <p class="text-secondary small mb-0">Cole conteúdos, resumos ou artigos para transformar em flashcards automaticamente.</p>
+                        </div>
+                      </li>
+                      <li class="d-flex align-items-start gap-3">
+                        <i class="bi bi-pencil-square text-primary fs-4"></i>
+                        <div>
+                          <p class="fw-semibold mb-1">Importar CSV</p>
+                          <p class="text-secondary small mb-0">Tenha total controle importando cartas existentes de outras ferramentas.</p>
+                        </div>
+                      </li>
+                      <li class="d-flex align-items-start gap-3">
+                        <i class="bi bi-clock-history text-primary fs-4"></i>
+                        <div>
+                          <p class="fw-semibold mb-1">Histórico de revisão</p>
+                          <p class="text-secondary small mb-0">Visualize quando cada carta foi estudada pela última vez.</p>
+                        </div>
+                      </li>
+                    </ul>
+                    <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#createCardModal">
+                      <i class="bi bi-plus-lg me-2"></i> Nova carta manual
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="d-flex flex-column gap-3">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+              <div>
+                <h2 class="h4 fw-bold mb-1">Cartas do baralho</h2>
+                <p class="text-secondary mb-0">Reveja e organize as cartas criadas manualmente ou com IA.</p>
+              </div>
+              <form class="d-flex flex-wrap gap-2" hx-get="/app/decks/<%= deck.id %>/cards" hx-target="#cardsList" hx-swap="innerHTML" data-loading-overlay="false">
+                <div class="input-group">
+                  <span class="input-group-text bg-body-tertiary border-0"><i class="bi bi-search"></i></span>
+                  <input class="form-control border-0" type="search" name="q" placeholder="Buscar por título, tag ou conteúdo" />
+                </div>
+                <select class="form-select" name="difficulty">
+                  <option value="">Dificuldade</option>
+                  <option value="easy">Fácil</option>
+                  <option value="medium">Média</option>
+                  <option value="hard">Difícil</option>
+                </select>
+                <button type="submit" class="btn btn-outline-secondary" data-loading-button>
+                  <span data-loading-label>Filtrar</span>
+                  <span class="d-none" data-loading-spinner>
+                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                    <span class="ms-2">Carregando...</span>
+                  </span>
+                </button>
+              </form>
+            </div>
+
+            <div id="cardsList" class="d-flex flex-column gap-3">
+              <% deck.cards.forEach(function(card) { %>
+                <article class="flashcard-item card border-0 shadow-sm">
+                  <div class="card-body p-4 d-flex flex-column gap-3">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                      <div>
+                        <h3 class="h5 fw-semibold mb-1"><%= card.question %></h3>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                          <% card.tags.forEach(function(tag) { %>
+                            <span class="badge text-bg-light pill"><%= tag %></span>
+                          <% }) %>
+                        </div>
+                        <span class="badge badge-difficulty <%= card.difficulty %>">
+                          <%= card.difficulty === 'easy' ? 'Fácil' : card.difficulty === 'medium' ? 'Média' : 'Difícil' %>
+                        </span>
+                      </div>
+                      <div class="text-secondary small text-lg-end">
+                        <p class="mb-1"><i class="bi bi-clock-history me-1"></i> Revisado em <%= new Date(card.lastReviewedAt).toLocaleDateString('pt-BR') %></p>
+                        <p class="mb-0"><i class="bi bi-journal-text me-1"></i> ID: <%= card.id %></p>
+                      </div>
+                    </div>
+                    <div class="border rounded-4 bg-body-tertiary p-3">
+                      <button
+                        class="btn btn-outline-primary btn-sm mb-2"
+                        type="button"
+                        data-action="toggle-answer"
+                        data-target="#card-answer-<%= deck.id %>-<%= card.id %>"
+                        aria-controls="card-answer-<%= deck.id %>-<%= card.id %>"
+                        aria-expanded="false"
+                      >
+                        <span data-visible-label>
+                          <i class="bi bi-eye me-1"></i> Revelar resposta
+                        </span>
+                        <span class="d-none" data-hidden-label>
+                          <i class="bi bi-eye-slash me-1"></i> Ocultar resposta
+                        </span>
+                      </button>
+                      <div id="card-answer-<%= deck.id %>-<%= card.id %>" class="d-none">
+                        <p class="mb-0"><%= card.answer %></p>
+                      </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#editCardModal">
+                        <i class="bi bi-pencil me-1"></i> Editar
+                      </button>
+                      <button class="btn btn-outline-danger btn-sm" type="button">
+                        <i class="bi bi-trash me-1"></i> Remover
+                      </button>
+                      <button class="btn btn-outline-primary btn-sm" type="button">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Mover para revisão
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              <% }) %>
+            </div>
+          </section>
+        </div>
+      </main>
+      <%- include('../partials/footer') %>
+    </div>
+
+    <div class="modal fade" id="createCardModal" tabindex="-1" aria-labelledby="createCardLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="createCardLabel">Nova carta</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <form class="d-grid gap-3" hx-post="/api/decks/<%= deck.id %>/cards" hx-target="#global-alert-container" hx-swap="beforeend">
+              <div>
+                <label class="form-label fw-semibold" for="question">Pergunta</label>
+                <textarea class="form-control" id="question" name="question" rows="3" required></textarea>
+              </div>
+              <div>
+                <label class="form-label fw-semibold" for="answer">Resposta</label>
+                <textarea class="form-control" id="answer" name="answer" rows="4" required></textarea>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="difficulty">Dificuldade inicial</label>
+                  <select class="form-select" id="difficulty" name="difficulty" required>
+                    <option value="easy">Fácil</option>
+                    <option value="medium">Média</option>
+                    <option value="hard">Difícil</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="tags">Tags</label>
+                  <input class="form-control" type="text" id="tags" name="tags" placeholder="ex.: álgebra, equações" />
+                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary" data-loading-button>
+                  <span data-loading-label>Adicionar carta</span>
+                  <span class="d-none" data-loading-spinner>
+                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                    <span class="ms-2">Salvando...</span>
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="editCardModal" tabindex="-1" aria-labelledby="editCardLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="editCardLabel">Editar carta</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <form class="d-grid gap-3" hx-put="/api/decks/<%= deck.id %>/cards/<%= deck.cards[0].id %>" hx-target="#global-alert-container" hx-swap="beforeend">
+              <div>
+                <label class="form-label fw-semibold" for="questionEdit">Pergunta</label>
+                <textarea class="form-control" id="questionEdit" name="question" rows="3"><%= deck.cards[0].question %></textarea>
+              </div>
+              <div>
+                <label class="form-label fw-semibold" for="answerEdit">Resposta</label>
+                <textarea class="form-control" id="answerEdit" name="answer" rows="4"><%= deck.cards[0].answer %></textarea>
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary" data-loading-button>
+                  <span data-loading-label>Salvar alterações</span>
+                  <span class="d-none" data-loading-spinner>
+                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                    <span class="ms-2">Atualizando...</span>
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="deckSettings" aria-labelledby="deckSettingsLabel">
+      <div class="offcanvas-header">
+        <h5 id="deckSettingsLabel">Configurações do baralho</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      </div>
+      <div class="offcanvas-body d-grid gap-3">
+        <form class="d-grid gap-3" hx-put="/api/decks/<%= deck.id %>" hx-target="#global-alert-container" hx-swap="beforeend">
+          <div>
+            <label class="form-label fw-semibold" for="deckNameEdit">Nome do baralho</label>
+            <input class="form-control" type="text" id="deckNameEdit" name="name" value="<%= deck.name %>" required />
+          </div>
+          <div>
+            <label class="form-label fw-semibold" for="deckDescriptionEdit">Descrição</label>
+            <textarea class="form-control" id="deckDescriptionEdit" name="description" rows="3"><%= deck.description %></textarea>
+          </div>
+          <div>
+            <label class="form-label fw-semibold" for="deckGoal">Objetivo diário de revisão</label>
+            <input class="form-control" type="number" id="deckGoal" name="dailyGoal" min="1" value="<%= Math.round(deck.totalCards / 5) %>" />
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="smartScheduling" checked />
+            <label class="form-check-label" for="smartScheduling">Habilitar agendamento inteligente com IA</label>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Fechar</button>
+            <button type="submit" class="btn btn-primary" data-loading-button>
+              <span data-loading-label>Salvar alterações</span>
+              <span class="d-none" data-loading-spinner>
+                <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                <span class="ms-2">Atualizando...</span>
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <%- include('../partials/feedback') %>
+  <%- include('../partials/scripts') %>

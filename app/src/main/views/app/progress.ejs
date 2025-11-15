@@ -1,0 +1,151 @@
+<%- include('../partials/head', { title }) %>
+  <body>
+    <div class="d-flex flex-column min-vh-100">
+      <%- include('../partials/navbar', { active: 'progress', user }) %>
+      <main class="flex-grow-1">
+        <div class="container d-flex flex-column gap-4">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <h1 class="h3 fw-bold mb-1">Indicadores de aprendizagem</h1>
+              <p class="text-secondary mb-0">Acompanhe como você está evoluindo ao longo do tempo.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-secondary"><i class="bi bi-calendar3 me-2"></i> Últimos 30 dias</button>
+              <button class="btn btn-outline-secondary"><i class="bi bi-download me-2"></i> Exportar relatório</button>
+            </div>
+          </div>
+
+          <section class="row g-4">
+            <% indicators.forEach(function(indicator) { %>
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body p-4 d-flex flex-column gap-2">
+                    <span class="small text-uppercase text-secondary fw-semibold"><%= indicator.title %></span>
+                    <span class="display-6 fw-bold"><%= indicator.value %></span>
+                    <p class="text-secondary mb-0"><%= indicator.helperText %></p>
+                    <span class="badge <%= indicator.trend === 'up' ? 'text-bg-success' : indicator.trend === 'down' ? 'text-bg-danger' : 'text-bg-secondary' %> pill align-self-start">
+                      <i class="bi <%= indicator.trend === 'up' ? 'bi-arrow-up-right' : indicator.trend === 'down' ? 'bi-arrow-down-right' : 'bi-dash-lg' %> me-1"></i>
+                      <%= indicator.trendValue %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </section>
+
+          <section class="row g-4">
+            <div class="col-12 col-xl-7">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex flex-column gap-4">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h2 class="h5 fw-bold mb-1">Atividade recente</h2>
+                      <p class="text-secondary mb-0">Cartas criadas vs. revisadas (últimos 7 dias)</p>
+                    </div>
+                    <span class="badge text-bg-light pill">Atualizado agora</span>
+                  </div>
+                  <div class="d-flex align-items-end gap-3 justify-content-between">
+                    <% history.forEach(function(day) { %>
+                      <div class="text-center flex-grow-1">
+                        <div class="position-relative mb-2" style="height: 160px;">
+                          <div class="bg-primary-subtle chart-bar position-absolute bottom-0 start-50 translate-middle-x" style="width: 26px; height: <%= day.reviewed * 4 %>px;"></div>
+                          <div class="bg-info chart-bar position-absolute bottom-0 start-50 translate-middle-x" style="width: 26px; height: <%= day.created * 6 %>px; opacity: 0.6;"></div>
+                        </div>
+                        <span class="badge text-bg-light pill"><%= day.label %></span>
+                      </div>
+                    <% }) %>
+                  </div>
+                  <div class="d-flex flex-wrap gap-3 small text-secondary">
+                    <span><i class="bi bi-square-fill text-primary me-1"></i> Revisadas</span>
+                    <span><i class="bi bi-square-fill text-info me-1"></i> Criadas</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-xl-5">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex flex-column gap-4">
+                  <div>
+                    <h2 class="h5 fw-bold mb-1">Foco dos estudos</h2>
+                    <p class="text-secondary mb-0">Distribuição dos baralhos por área de conhecimento.</p>
+                  </div>
+                  <div class="d-flex flex-column gap-3">
+                    <% focus.forEach(function(item) { %>
+                      <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="fw-semibold"><%= item.subject %></span>
+                          <span class="text-secondary"><%= item.percentage %>%</span>
+                        </div>
+                        <div class="progress progress-bar-rounded" role="progressbar" aria-valuenow="<%= item.percentage %>" aria-valuemin="0" aria-valuemax="100">
+                          <div class="progress-bar bg-primary" style="width: <%= item.percentage %>%"></div>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                  <button class="btn btn-outline-primary align-self-start" hx-get="/api/insights" hx-target="#global-alert-container" hx-swap="beforeend">
+                    <i class="bi bi-robot me-2"></i> Pedir recomendação da IA
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+              <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1">Histórico consolidado</h2>
+                  <p class="text-secondary mb-0">Resumo geral das atividades realizadas.</p>
+                </div>
+                <div class="btn-group" role="group" aria-label="Visualização">
+                  <button type="button" class="btn btn-outline-secondary active">Resumo</button>
+                  <button type="button" class="btn btn-outline-secondary">Diário</button>
+                  <button type="button" class="btn btn-outline-secondary">Mensal</button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col">Métrica</th>
+                      <th scope="col">Última semana</th>
+                      <th scope="col">Variação</th>
+                      <th scope="col">Meta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Cartas revisadas</td>
+                      <td>132</td>
+                      <td><span class="text-success"><i class="bi bi-arrow-up-right me-1"></i>+18%</span></td>
+                      <td>120</td>
+                    </tr>
+                    <tr>
+                      <td>Cartas criadas</td>
+                      <td>34</td>
+                      <td><span class="text-info"><i class="bi bi-arrow-up-right me-1"></i>+9%</span></td>
+                      <td>30</td>
+                    </tr>
+                    <tr>
+                      <td>Tempo médio por sessão</td>
+                      <td>18 min</td>
+                      <td><span class="text-warning"><i class="bi bi-dash-lg me-1"></i>estável</span></td>
+                      <td>20 min</td>
+                    </tr>
+                    <tr>
+                      <td>Taxa de retenção</td>
+                      <td>87%</td>
+                      <td><span class="text-success"><i class="bi bi-arrow-up-right me-1"></i>+4%</span></td>
+                      <td>85%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+      <%- include('../partials/footer') %>
+    </div>
+    <%- include('../partials/feedback') %>
+  <%- include('../partials/scripts') %>
