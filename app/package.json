@@ -4,10 +4,11 @@
   "description": "Educational platform",
   "main": "dist/main/index.js",
   "author": "Douglas Volcato",
+  "type": "module",
   "license": "MIT",
   "scripts": {
     "start": "tsc && node --env-file=.env dist/main/index.js",
-    "dev": "nodemon --legacy-watch src/main/index.ts",
+    "dev": "cp ../.env .  && nodemon --legacy-watch src/main/index.ts",
     "build": "tsc",
     "test": "jest --passWithNoTests --runInBand --forceExit -c jest.config.js",
     "test-unit": "jest --passWithNoTests -c jest.unit.config.js",
@@ -16,8 +17,9 @@
     "test-coverage": "jest --passWithNoTests --coverage -c jest.unit.config.js"
   },
   "dependencies": {
-    "@langchain/community": "^0.0.40",
-    "@langchain/core": "^0.3.55",
+    "@langchain/community": "^1.0.3",
+    "@langchain/core": "^1.0.5",
+    "@langchain/openai": "^1.1.1",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -27,6 +29,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "node-cron": "^3.0.3",
     "pg": "^8.15.6",
     "prom-client": "^15.1.3",
@@ -36,7 +39,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.1.0",
+    "@faker-js/faker": "^9.9.0",
     "@types/cheerio": "^0.22.35",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.2",
@@ -51,12 +54,22 @@
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
-    "faker": "^6.6.6",
+    "faker": "^5.5.3",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
+  },
+  "_moduleAliases": {
+    "@main/*": "dist/src/main/*",
+    "@tests/*": "dist/src/tests/*",
+    "@db/*": "dist/src/db/*",
+    "@utils/*": "dist/src/utils/*",
+    "@controllers/*": "dist/src/controllers/*",
+    "@views/*": "dist/src/views/*",
+    "@usecases/*": "dist/src/usecases/*"
   }
 }

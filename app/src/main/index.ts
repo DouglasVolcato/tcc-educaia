@@ -1,3 +1,4 @@
+import 'module-alias/register.js';
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -5,9 +6,11 @@ import path from "path";
 
 import { appRouter } from "./routes/app.routes";
 
-dotenv.config();
+dotenv.config({
+  path: "./.env"
+});
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 const app = express();
 const rootDir = path.resolve(__dirname, "..", "..");
 
@@ -29,7 +32,7 @@ app.get("/", (req, res) => {
 app.use("/app", appRouter);
 
 app.listen(port, () => {
-  console.log(`Server running on ${process.env.SERVER_DOMAIN}`);
-  console.log(`Documentation on ${process.env.SERVER_DOMAIN}/docs`);
-  console.log(`Client on ${process.env.SERVER_DOMAIN}/client`);
+  console.log(`Server running on ${process.env.API_URL || "http://localhost:3000"}`);
+  console.log(`Documentation on ${process.env.API_URL}/docs`);
+  console.log(`Client on ${process.env.API_URL}/client`);
 });
