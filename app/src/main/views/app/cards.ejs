@@ -1,7 +1,7 @@
 <%- include('../partials/head', { title }) %>
   <body>
     <div class="d-flex flex-column min-vh-100">
-      <%- include('../partials/navbar', { active: 'decks', user }) %>
+      <%- include('../partials/navbar', { active: 'decks', user, hideNavbar: false }) %>
       <main class="flex-grow-1">
         <div class="container d-flex flex-column gap-4">
           <nav aria-label="breadcrumb">

@@ -1,10 +1,11 @@
+import { appRouter } from "./routes/app.routes.ts";
+import { fileURLToPath } from "url";
 import 'module-alias/register.js';
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 
-import { appRouter } from "./routes/app.routes";
 
 dotenv.config({
   path: "./.env"
@@ -12,6 +13,9 @@ dotenv.config({
 
 const port = process.env.PORT;
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..", "..");
 
 app.locals.brand = "EducaIA";

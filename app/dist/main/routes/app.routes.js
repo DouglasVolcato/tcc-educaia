@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.appRouter = void 0;
-const express_1 = require("express");
+import { Router } from "express";
 const mockUser = {
     name: "Ana Paula",
     email: "ana.paula@example.com",
@@ -189,8 +186,7 @@ const mockLearningFocus = [
     { subject: "História", percentage: 32 },
     { subject: "Idiomas", percentage: 23 },
 ];
-const appRouter = (0, express_1.Router)();
-exports.appRouter = appRouter;
+const appRouter = Router();
 appRouter.get("/", (req, res) => {
     res.redirect("/app/decks");
 });
@@ -295,3 +291,4 @@ appRouter.get("/account", (req, res) => {
         ],
     });
 });
+export { appRouter };

@@ -1,4 +1,5 @@
-<% if (!hideNavbar) { %>
+<% if (hideNavbar) { %>
+<% } else { %>
   <nav class="navbar navbar-expand-lg bg-body shadow-sm">
     <div class="container py-2">
       <a class="navbar-brand fw-bold" href="/app/decks"><%= locals.brand || 'EducaIA' %></a>

@@ -1,22 +1,30 @@
+import { appRouter } from "./routes/app.routes.js";
+import { fileURLToPath } from "url";
 import 'module-alias/register.js';
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
 dotenv.config({
     path: "./.env"
 });
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, "..", "..");
+app.locals.brand = "EducaIA";
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
-app.set("views", path_1.default.join(rootDir, "src", "main", "views"));
-app.use("/static", express_1.default.static(path_1.default.join(rootDir, "src", "main", "public")));
+app.set("views", path.join(rootDir, "src", "main", "views"));
+app.use("/static", express.static(path.join(rootDir, "src", "main", "public")));
 app.disable("x-powered-by");
 app.get("/", (req, res) => {
     res.redirect("/app/login");
 });
-app.use("/app", app_routes_1.appRouter);
+app.use("/app", appRouter);
 app.listen(port, () => {
     console.log(`Server running on ${process.env.API_URL || "http://localhost:3000"}`);
     console.log(`Documentation on ${process.env.API_URL}/docs`);
