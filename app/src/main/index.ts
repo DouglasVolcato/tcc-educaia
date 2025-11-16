@@ -3,9 +3,11 @@ import express from "express";
 import dotenv from "dotenv"; 
 import cors from "cors";
 
-dotenv.config();
+dotenv.config({
+  path: "./.env"
+});
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors());
@@ -19,7 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on ${process.env.SERVER_DOMAIN}`);
-  console.log(`Documentation on ${process.env.SERVER_DOMAIN}/docs`);
-  console.log(`Client on ${process.env.SERVER_DOMAIN}/client`);
+  console.log(`Server running on ${process.env.API_URL || "http://localhost:3000"}`);
+  console.log(`Documentation on ${process.env.API_URL}/docs`);
+  console.log(`Client on ${process.env.API_URL}/client`);
 });
