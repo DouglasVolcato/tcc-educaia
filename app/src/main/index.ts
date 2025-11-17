@@ -1,10 +1,12 @@
 import { appRouter } from "./routes/app.routes.ts";
+import { apiRouter } from "./routes/api.routes.ts";
 import { fileURLToPath } from "url";
 import 'module-alias/register.js';
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
+import { authMiddleware } from "../controllers/middlewares/authMiddleware.ts";
 
 
 dotenv.config({
@@ -39,7 +41,8 @@ app.get("/terms", (_, res) => {
   res.render("landing/terms");
 });
 
-app.use("/app", appRouter);
+app.use("/api", apiRouter);
+app.use("/app", authMiddleware, appRouter);
 
 app.listen(port, () => {
   console.log(`Server running on ${process.env.API_URL || "http://localhost:3000"}`);
