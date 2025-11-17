@@ -10,6 +10,9 @@
     "module": "esnext", // ou "es2022"
     "moduleResolution": "bundler", 
     "target": "es2021",
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    
     "baseUrl": ".",
     "paths": {
       "@main/*": ["src/main/*"],

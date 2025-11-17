@@ -1,0 +1,88 @@
+<%- include('../partials/head', { title }) %>
+  <body class="bg-light">
+    <div class="d-flex flex-column min-vh-100">
+      <%- include('../partials/navbar', { hideNavbar: true }) %>
+      <main class="container flex-grow-1 d-flex align-items-center justify-content-center">
+        <div class="row w-100 align-items-center g-5">
+          <div class="col-lg-6 d-none d-lg-block">
+            <div class="hero-card rounded-5 p-5 text-white">
+              <span class="badge bg-white text-primary pill mb-3">Aprenda com IA</span>
+              <h1 class="display-5 fw-bold">Bem-vindo de volta!</h1>
+              <p class="lead opacity-75 mb-4">
+                Revise seus flashcards com a ajuda da inteligência artificial, acompanhe o progresso e alcance seus objetivos de estudo.
+              </p>
+              <ul class="list-unstyled opacity-75 mb-5">
+                <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill"></i> Planejamento inteligente</li>
+                <li class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-check-circle-fill"></i> Importação de conteúdo em segundos</li>
+                <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill"></i> Indicadores de performance em tempo real</li>
+              </ul>
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-light btn-lg" href="/app/register">Criar conta</a>
+                <a class="btn btn-light btn-lg" href="/app/decks">Explorar demo</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5 ms-lg-auto">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+              <div class="mb-4 text-center">
+                <span class="badge bg-primary-subtle text-primary pill mb-2">Acesse sua conta</span>
+                <h2 class="fw-bold">Entrar</h2>
+                <p class="text-secondary mb-0">Use seu e-mail e senha cadastrados.</p>
+              </div>
+              <form
+                class="d-grid gap-3"
+                hx-post="/api/auth/login"
+                hx-target="#global-alert-container"
+                hx-swap="beforeend"
+                data-loading-overlay="true"
+              >
+                <div>
+                  <label class="form-label fw-semibold" for="email">E-mail</label>
+                  <input
+                    class="form-control form-control-lg"
+                    type="email"
+                    name="email"
+                    id="email"
+                    placeholder="seuemail@exemplo.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <label class="form-label fw-semibold" for="password">Senha</label>
+                    <a class="small link-primary text-decoration-none" href="#">Esqueci minha senha</a>
+                  </div>
+                  <input
+                    class="form-control form-control-lg"
+                    type="password"
+                    name="password"
+                    id="password"
+                    placeholder="Digite sua senha"
+                    minlength="6"
+                    required
+                  />
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="true" id="remember" name="remember" />
+                  <label class="form-check-label" for="remember">Permanecer conectado</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" data-loading-button>
+                  <span data-loading-label>Entrar</span>
+                  <span class="d-none" data-loading-spinner>
+                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                    <span class="ms-2">Entrando...</span>
+                  </span>
+                </button>
+              </form>
+              <div class="border-top mt-4 pt-4 text-center">
+                <p class="mb-1 text-secondary">Ainda não tem conta?</p>
+                <a class="fw-semibold" href="/app/register">Comece agora gratuitamente</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <%- include('../partials/footer') %>
+    </div>
+    <%- include('../partials/feedback') %>
+  <%- include('../partials/scripts') %>

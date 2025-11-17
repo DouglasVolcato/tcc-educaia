@@ -1,0 +1,135 @@
+<%- include('../partials/head', { title }) %>
+  <body class="bg-light">
+    <div class="d-flex flex-column min-vh-100">
+      <%- include('../partials/navbar', { hideNavbar: true }) %>
+      <main class="container flex-grow-1 py-5">
+        <div class="row justify-content-center g-5">
+          <div class="col-xl-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+              <div class="mb-4">
+                <span class="badge bg-success-subtle text-success pill mb-2">Comece gratuito</span>
+                <h2 class="fw-bold">Criar minha conta</h2>
+                <p class="text-secondary mb-0">
+                  Crie baralhos personalizados, gere flashcards com IA e acompanhe sua evolução dia após dia.
+                </p>
+              </div>
+              <form
+                class="d-grid gap-3"
+                hx-post="/api/auth/register"
+                hx-target="#global-alert-container"
+                hx-swap="beforeend"
+                data-loading-overlay="true"
+              >
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="firstName">Nome</label>
+                    <input class="form-control form-control-lg" type="text" id="firstName" name="firstName" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="lastName">Sobrenome</label>
+                    <input class="form-control form-control-lg" type="text" id="lastName" name="lastName" required />
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label fw-semibold" for="email">E-mail</label>
+                  <input class="form-control form-control-lg" type="email" id="email" name="email" required />
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="password">Senha</label>
+                    <input class="form-control form-control-lg" type="password" id="password" name="password" minlength="6" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="confirmPassword">Confirmar senha</label>
+                    <input class="form-control form-control-lg" type="password" id="confirmPassword" name="confirmPassword" minlength="6" required />
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label fw-semibold" for="goal">Objetivo de estudo</label>
+                  <select class="form-select form-select-lg" id="goal" name="goal" required>
+                    <option value="">Selecione uma opção</option>
+                    <option value="vestibular">Preparação para vestibular</option>
+                    <option value="idiomas">Aprender um idioma</option>
+                    <option value="carreira">Aprimorar carreira profissional</option>
+                    <option value="concurso">Concurso público</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label fw-semibold" for="timezone">Fuso horário</label>
+                  <select class="form-select form-select-lg" id="timezone" name="timezone" required>
+                    <option value="America/Sao_Paulo">(GMT-03:00) São Paulo</option>
+                    <option value="America/Manaus">(GMT-04:00) Manaus</option>
+                    <option value="America/Fortaleza">(GMT-03:00) Fortaleza</option>
+                    <option value="America/Recife">(GMT-03:00) Recife</option>
+                  </select>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="true" id="terms" name="terms" required />
+                  <label class="form-check-label" for="terms">
+                    Concordo com os <a class="link-primary text-decoration-none" href="#">Termos de uso</a> e
+                    <a class="link-primary text-decoration-none" href="#">Política de privacidade</a>.
+                  </label>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg" data-loading-button>
+                  <span data-loading-label>Criar conta gratuita</span>
+                  <span class="d-none" data-loading-spinner>
+                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
+                    <span class="ms-2">Configurando ambiente...</span>
+                  </span>
+                </button>
+              </form>
+              <div class="border-top mt-4 pt-4 text-center">
+                <p class="mb-1 text-secondary">Já possui conta?</p>
+                <a class="fw-semibold" href="/app/login">Entrar com meu e-mail</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5 d-none d-xl-flex">
+            <div class="card hero-card w-100 rounded-5 p-5 text-white">
+              <div class="d-flex flex-column gap-4">
+                <div>
+                  <h3 class="fw-bold mb-3">Tudo para acelerar seu aprendizado</h3>
+                  <p class="mb-0 opacity-75">
+                    Geração automática de flashcards, plano de revisão inteligente, importação de conteúdo e dashboards completos.
+                  </p>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-4 p-4">
+                  <h4 class="h6 text-uppercase opacity-75">Resultados recentes</h4>
+                  <div class="d-flex flex-wrap gap-4">
+                    <div>
+                      <span class="d-block fs-4 fw-bold">+186</span>
+                      <span class="small text-uppercase">Cartas revisadas</span>
+                    </div>
+                    <div>
+                      <span class="d-block fs-4 fw-bold">87%</span>
+                      <span class="small text-uppercase">Taxa de acertos</span>
+                    </div>
+                    <div>
+                      <span class="d-block fs-4 fw-bold">12</span>
+                      <span class="small text-uppercase">Dias consecutivos</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-light text-primary pill">IA copiloto</span>
+                    <span class="opacity-75">Cria flashcards a partir de qualquer texto</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-light text-primary pill">Organização</span>
+                    <span class="opacity-75">Baralhos por assunto com indicadores de revisão</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-light text-primary pill">Resultados</span>
+                    <span class="opacity-75">Acompanhe seu desempenho em gráficos intuitivos</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <%- include('../partials/footer') %>
+    </div>
+    <%- include('../partials/feedback') %>
+  <%- include('../partials/scripts') %>
