@@ -1,0 +1,19 @@
+<%
+  const buttonClasses = typeof themeButtonClasses !== 'undefined'
+    ? themeButtonClasses
+    : 'btn btn-outline-secondary d-inline-flex align-items-center gap-2';
+  const labelClasses = typeof themeLabelClasses !== 'undefined'
+    ? themeLabelClasses
+    : 'small fw-semibold d-none d-md-inline';
+%>
+<button
+  class="<%= buttonClasses %>"
+  type="button"
+  data-theme-toggle
+  aria-pressed="false"
+  title="Alternar tema"
+>
+  <i class="bi bi-brightness-high-fill" aria-hidden="true" data-theme-icon="light"></i>
+  <i class="bi bi-moon-stars-fill d-none" aria-hidden="true" data-theme-icon="dark"></i>
+  <span class="<%= labelClasses %>" data-theme-text>Tema claro</span>
+</button>

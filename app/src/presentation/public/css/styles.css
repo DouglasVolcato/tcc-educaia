@@ -2,6 +2,57 @@
   --edu-gradient: linear-gradient(135deg, #4f46e5 0%, #22d3ee 100%);
 }
 
+:root[data-bs-theme='dark'] {
+  --edu-gradient: linear-gradient(135deg, #312e81 0%, #0f172a 100%);
+}
+
+:root[data-bs-theme='dark'] body {
+  background-color: #020617;
+  color: #e2e8f0;
+}
+
+:root[data-bs-theme='dark'] .text-secondary {
+  color: #94a3b8 !important;
+}
+
+:root[data-bs-theme='dark'] .bg-white,
+:root[data-bs-theme='dark'] .bg-light,
+:root[data-bs-theme='dark'] .card,
+:root[data-bs-theme='dark'] .list-group-item,
+:root[data-bs-theme='dark'] .feature-card,
+:root[data-bs-theme='dark'] .review-card,
+:root[data-bs-theme='dark'] article {
+  background-color: #0f172a !important;
+  color: inherit;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+:root[data-bs-theme='dark'] .list-group-item {
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+:root[data-bs-theme='dark'] .hero-card {
+  background: var(--edu-gradient);
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.45);
+}
+
+:root[data-bs-theme='dark'] .hero-card .btn-outline-light {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+:root[data-bs-theme='dark'] .hero-card .btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-bs-theme='dark'] .deck-card:hover {
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.65);
+}
+
+:root[data-bs-theme='dark'] .flashcard-item:hover {
+  border-left-color: #6366f1;
+  background-color: rgba(99, 102, 241, 0.15);
+}
+
 body {
   background-color: #f5f7fb;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
