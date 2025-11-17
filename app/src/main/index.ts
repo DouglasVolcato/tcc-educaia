@@ -30,10 +30,13 @@ app.use("/static", express.static(path.join(rootDir, "src", "presentation", "pub
 app.disable("x-powered-by");
 
 app.get("/", (_, res) => {
-  // res.render("app/login", {
-  //   title: "Entrar",
-  // });
-  res.json({ message: "EducaIA API" });
+  res.render("landing/index");
+});
+app.get("/privacy", (_, res) => {
+  res.render("landing/privacy");
+});
+app.get("/terms", (_, res) => {
+  res.render("landing/terms");
 });
 
 app.use("/app", appRouter);

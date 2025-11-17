@@ -1,0 +1,122 @@
+<% const title = 'Termos de Uso'; %>
+<%- include('../partials/head-landing', { title }) %>
+  <body class="gradient-bg">
+    <header class="bg-white border-bottom">
+      <nav class="navbar navbar-expand-lg py-3 container">
+        <a class="navbar-brand fw-bold text-primary" href="/">EducaIA</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#mainNav"
+          aria-controls="mainNav"
+          aria-expanded="false"
+          aria-label="Menu"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-3">
+          </ul>
+          <div class="d-flex gap-2 ms-lg-4">
+            <a class="btn btn-outline-secondary" href="/app/login">Entrar</a>
+            <a class="btn btn-primary" href="/app/register">Criar conta</a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+          <article class="bg-white border rounded-4 shadow-sm p-4 p-md-5">
+            <header class="mb-4 text-center">
+              <span class="badge bg-primary-subtle text-primary text-uppercase">Documento legal</span>
+              <h1 class="fw-bold mt-3">Termos de Uso da EducaIA</h1>
+            </header>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">1. Aceite dos termos</h2>
+              <p>
+                Ao criar uma conta ou utilizar qualquer recurso da EducaIA, você declara ter lido, entendido e concordado com os
+                presentes Termos de Uso. Caso não concorde com algum item, deverá interromper o uso da plataforma imediatamente.
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">2. Público-alvo e cadastro</h2>
+              <p>
+                A EducaIA é destinada a estudantes, professores e profissionais interessados em utilizar flashcards, indicadores
+                de desempenho e inteligência artificial para aprimorar o aprendizado. O usuário deve fornecer informações verdadeiras
+                ao se registrar, manter suas credenciais em sigilo e notificar a equipe de suporte em caso de uso indevido.
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">3. Recursos da plataforma</h2>
+              <p>
+                A EducaIA oferece login seguro, criação e gestão de baralhos de flashcards, importação de conhecimento em campo
+                de texto livre para geração assistida por IA, indicadores de revisão e registros de dificuldade.
+                O usuário é responsável pelo conteúdo enviado (perguntas, respostas, textos importados ou notas).
+              </p>
+              <p class="mb-0">
+                Recursos adicionais, como dashboards e revisões inteligentes, podem ser atualizados ou descontinuados para evolução
+                do produto. Avisaremos sempre que mudanças impactarem o uso de forma significativa.
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">4. Propriedade intelectual</h2>
+              <p>
+                Todo o software, interface e materiais criados pela EducaIA pertencem exclusivamente à plataforma. O usuário detém
+                os direitos sobre seus conteúdos, mas concede licença não exclusiva para que possamos armazená-los, exibi-los e
+                processá-los com o objetivo de prestar o serviço.
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">5. Processamento de dados e localização</h2>
+              <p>
+                Para viabilizar geração de flashcards, análises de revisão e notificações, podemos processar e armazenar dados em
+                provedores localizados no Brasil e em outros países que ofereçam infraestrutura adequada. Isso inclui provedores
+                de computação em nuvem, ferramentas de e-mail transacional e serviços contratados para suportar o motor de IA.
+                Em qualquer cenário aplicaremos salvaguardas compatíveis com a Lei Geral de Proteção de Dados (LGPD).
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">6. Uso aceitável</h2>
+              <p>
+                É proibido utilizar a EducaIA para distribuir spam, infringir direitos autorais, inserir conteúdos ilegais ou tentar
+                acessar camadas do serviço sem autorização. Podemos suspender ou cancelar contas que violem estes termos ou que
+                comprometam a segurança de outros usuários.
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">7. Responsabilidades</h2>
+              <p>
+                A EducaIA oferece ferramentas de apoio ao estudo, mas o resultado acadêmico depende do engajamento pessoal.
+                Empregamos medidas técnicas razoáveis para proteger dados e manter o serviço disponível, porém não garantimos
+                disponibilidade ininterrupta, uma vez que podem existir manutenções programadas ou falhas de redes externas.
+              </p>
+            </section>
+
+            <section class="mb-4">
+              <h2 class="h4 fw-semibold">8. Contato e suporte</h2>
+              <p>
+                Em caso de dúvidas sobre estes Termos ou para reportar abusos, envie um e-mail para <a href="mailto:douglasvolcato@gmail.com">douglasvolcato@gmail.com</a>.
+                Faremos o possível para responder em até 5 dias úteis.
+              </p>
+            </section>
+
+            <footer class="border-top pt-4 text-center">
+              <p class="mb-2 text-secondary">Obrigado por confiar na EducaIA para acelerar seu aprendizado.</p>
+              <a class="btn btn-primary" href="/">Voltar para a página inicial</a>
+            </footer>
+          </article>
+        </div>
+      </div>
+    </main>
+  <%- include('../partials/footer') %>
+  <%- include('../partials/scripts') %>
