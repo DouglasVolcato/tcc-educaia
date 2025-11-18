@@ -14,9 +14,6 @@ export class TokenHandlerAdapter {
 
     public verifyToken(token: string): any {
         const decoded = jwt.verify(token, this.secret);
-        if (typeof decoded === "string" || !("userId" in decoded)) {
-            throw new Error("Invalid token payload");
-        }
         return decoded;
     }
 }
