@@ -1,18 +1,18 @@
-import { Router, Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import { v4 as uuid } from "uuid";
-import { usersModel } from "../../db/models/users-model.ts";
-import { JwtAdapter } from "../../adapters/jwt-adapter.ts";
 import { SESSION_COOKIE_NAME } from "../../controllers/middlewares/authMiddleware.ts";
+import { TokenHandlerAdapter } from "src/adapters/token-handler-adapter";
+import { usersModel } from "../../db/models/users-model.ts";
+import { Router, Request, Response } from "express";
+import { v4 as uuid } from "uuid";
+import bcrypt from "bcryptjs";
 
 const apiRouter = Router();
-let jwtAdapter: JwtAdapter | null = null;
+let jwtAdapter: TokenHandlerAdapter | null = null;
 
 const COOKIE_MAX_AGE = 60 * 60 * 1000; // 1 hour
 
 const getJwtAdapter = () => {
   if (!jwtAdapter) {
-    jwtAdapter = new JwtAdapter();
+    jwtAdapter = new TokenHandlerAdapter();
   }
   return jwtAdapter;
 };

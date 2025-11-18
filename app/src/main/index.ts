@@ -1,3 +1,4 @@
+import { authMiddleware } from "../controllers/middlewares/authMiddleware.ts";
 import { appRouter } from "./routes/app.routes.ts";
 import { apiRouter } from "./routes/api.routes.ts";
 import { fileURLToPath } from "url";
@@ -6,7 +7,6 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
-import { authMiddleware } from "../controllers/middlewares/authMiddleware.ts";
 
 
 dotenv.config({

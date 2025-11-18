@@ -1,15 +1,15 @@
-import { NextFunction, Request, Response } from "express";
-import { JwtAdapter } from "../../adapters/jwt-adapter.ts";
+import { TokenHandlerAdapter } from "src/adapters/token-handler-adapter";
 import { usersModel } from "../../db/models/users-model.ts";
+import { NextFunction, Request, Response } from "express";
 
 export const SESSION_COOKIE_NAME = "session_token";
 const PUBLIC_PATHS = new Set(["/login", "/register", "/"]);
 
-let jwtAdapter: JwtAdapter | null = null;
+let jwtAdapter: TokenHandlerAdapter | null = null;
 
 const getJwtAdapter = () => {
   if (!jwtAdapter) {
-    jwtAdapter = new JwtAdapter();
+    jwtAdapter = new TokenHandlerAdapter();
   }
   return jwtAdapter;
 };
