@@ -17,6 +17,10 @@ const flashcardFields = [
   "updated_at",
 ];
 
+const flashcardInsertFields = flashcardFields.filter(
+  (field) => field !== "created_at" && field !== "updated_at",
+);
+
 export type FlashcardRow = {
   id: string;
   question: string;
@@ -40,7 +44,7 @@ export class FlashcardModel extends Repository {
       tableName: "flashcards",
       idField: "id",
       publicFields: flashcardFields,
-      insertFields: flashcardFields,
+      insertFields: flashcardInsertFields,
       updateFields: [
         "question",
         "answer",
@@ -51,7 +55,6 @@ export class FlashcardModel extends Repository {
         "difficulty",
         "tags",
         "source",
-        "updated_at",
       ],
     });
   }
