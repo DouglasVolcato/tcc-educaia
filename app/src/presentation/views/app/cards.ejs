@@ -238,14 +238,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
           </div>
           <div class="modal-body">
-            <form class="d-grid gap-3" hx-put="/api/decks/<%= deck.id %>/cards/<%= deck.cards[0].id %>" hx-target="#global-alert-container" hx-swap="beforeend">
+            <form class="d-grid gap-3" hx-put="/api/decks/<%= deck.id %>/cards/<%= deck.cards.length ? deck.cards[0].id : '' %>" hx-target="#global-alert-container" hx-swap="beforeend">
               <div>
                 <label class="form-label fw-semibold" for="questionEdit">Pergunta</label>
-                <textarea class="form-control" id="questionEdit" name="question" rows="3"><%= deck.cards[0].question %></textarea>
+                <textarea class="form-control" id="questionEdit" name="question" rows="3"><%= deck.cards.length ? deck.cards[0].question : '' %></textarea>
               </div>
               <div>
                 <label class="form-label fw-semibold" for="answerEdit">Resposta</label>
-                <textarea class="form-control" id="answerEdit" name="answer" rows="4"><%= deck.cards[0].answer %></textarea>
+                <textarea class="form-control" id="answerEdit" name="answer" rows="4"><%= deck.cards.length ? deck.cards[0].answer : '' %></textarea>
               </div>
               <div class="d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
