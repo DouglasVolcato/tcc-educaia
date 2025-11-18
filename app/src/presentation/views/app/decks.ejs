@@ -110,7 +110,7 @@
                       <div class="d-flex justify-content-between align-items-center border-top pt-3">
                         <div class="d-flex align-items-center gap-3 text-secondary small">
                           <span><i class="bi bi-lightning-charge-fill text-warning me-1"></i> <%= deck.newCards %> novos</span>
-                          <span><i class="bi bi-clock-history text-primary me-1"></i> Última revisão <%= deck.cards[0].lastReviewedAt %></span>
+                          <span><i class="bi bi-clock-history text-primary me-1"></i> Última revisão <%= deck.cards && deck.cards.length ? deck.cards[0].lastReviewedAt : '' %></span>
                         </div>
                         <button
                           class="btn btn-outline-secondary btn-sm"

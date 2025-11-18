@@ -22,8 +22,8 @@ class UsersModel extends Repository {
         "created_at",
         "updated_at",
       ],
-      insertFields: ["id", "name", "email", "password", "created_at", "updated_at"],
-      updateFields: ["name", "email", "password", "updated_at"],
+      insertFields: ["id", "name", "email", "password"],
+      updateFields: ["name", "email", "password"],
     });
   }
 
@@ -45,14 +45,11 @@ class UsersModel extends Repository {
     email: string;
     password: string;
   }): Promise<void> {
-    const now = new Date();
     const fields: InputField[] = [
       { key: "id", value: input.id },
       { key: "name", value: input.name },
       { key: "email", value: input.email },
       { key: "password", value: input.password },
-      { key: "created_at", value: now },
-      { key: "updated_at", value: now },
     ];
 
     await this.insert({ fields });

@@ -20,14 +20,11 @@ export class IntegrationModel extends Repository {
         "name",
         "slug",
         "connected",
-        "created_at",
-        "updated_at",
       ],
       updateFields: [
         "name",
         "slug",
         "connected",
-        "updated_at",
       ],
     });
   }
