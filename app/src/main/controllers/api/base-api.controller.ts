@@ -31,11 +31,22 @@ export abstract class BaseApiController {
   ) {
     this.router = Router();
     this.setupMiddlewares();
-    this.registerRoutes();
+    this.deferRouteRegistration();
     this.app.use(this.options.basePath ?? "/api", this.router);
   }
 
   protected abstract registerRoutes(): void;
+
+  private deferRouteRegistration() {
+    queueMicrotask(() => {
+      try {
+        this.registerRoutes();
+      } catch (error) {
+        console.error("Failed to register API routes", error);
+        throw error;
+      }
+    });
+  }
 
   private setupMiddlewares() {
     if (this.options.requiresAuth ?? true) {
