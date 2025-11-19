@@ -1,7 +1,6 @@
-import { authMiddleware } from "../controllers/middlewares/authMiddleware.ts";
 import { DbConnection } from "../db/db-connection.ts";
-import { appRouter } from "./routes/app.routes.ts";
 import { registerApiControllers } from "./controllers/api/index.ts";
+import { registerAppRoutes } from "./routes/app.routes.ts";
 import { fileURLToPath } from "url";
 import "module-alias/register.js";
 import { inspect } from "util";
@@ -62,7 +61,7 @@ app.get("/terms", (_, res) => {
 });
 
 registerApiControllers(app);
-app.use("/app", authMiddleware, appRouter);
+registerAppRoutes(app);
 
 const bootstrap = async () => {
   try {
