@@ -69,8 +69,6 @@ const bootstrap = async () => {
     await DbConnection.connect();
     app.listen(port, () => {
       console.log(`Server running on ${process.env.API_URL || "http://localhost:3000"}`);
-      console.log(`Documentation on ${process.env.API_URL}/docs`);
-      console.log(`Client on ${process.env.API_URL}/client`);
     });
   } catch (error) {
     console.error("Failed to start server", normalizeError(error));
