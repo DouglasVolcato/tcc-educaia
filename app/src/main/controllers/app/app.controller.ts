@@ -1,11 +1,11 @@
 import { Application, Request, Response } from "express";
-import { BaseApiController } from "./api/base-api.controller.ts";
-import { authMiddleware } from "../../controllers/middlewares/authMiddleware.ts";
-import { DbConnection } from "../../db/db-connection.ts";
-import { deckModel } from "../../db/models/deck.model.ts";
-import { flashcardModel } from "../../db/models/flashcard.model.ts";
-import { integrationModel } from "../../db/models/integration.model.ts";
-import { userModel, UserRow } from "../../db/models/user.model.ts";
+import { BaseController } from "../base.controller.ts";
+import { authMiddleware } from "../../../controllers/middlewares/authMiddleware.ts";
+import { DbConnection } from "../../../db/db-connection.ts";
+import { deckModel } from "../../../db/models/deck.model.ts";
+import { flashcardModel } from "../../../db/models/flashcard.model.ts";
+import { integrationModel } from "../../../db/models/integration.model.ts";
+import { userModel, UserRow } from "../../../db/models/user.model.ts";
 
 export type FlashcardView = {
   id: string;
@@ -54,7 +54,7 @@ export type ProgressIndicator = {
   trendValue: string;
 };
 
-export class AppController extends BaseApiController {
+export class AppController extends BaseController {
   private static readonly WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
 
   constructor(app: Application) {
@@ -214,33 +214,33 @@ export class AppController extends BaseApiController {
 
         const session: ReviewSession = nextCard
           ? {
-              deckName: nextCard.deck_name,
-              cardNumber: Number(nextCard.position ?? 1),
-              totalCards: totalDue,
-              streakInDays: user.streakInDays,
-              card: {
-                id: nextCard.id,
-                question: nextCard.question,
-                answer: nextCard.answer,
-                source: nextCard.source ?? "Conteúdo cadastrado manualmente",
-                tags: nextCard.tags ?? [],
-                dueIn: this.formatDueIn(nextCard.next_review_date),
-              },
-            }
+            deckName: nextCard.deck_name,
+            cardNumber: Number(nextCard.position ?? 1),
+            totalCards: totalDue,
+            streakInDays: user.streakInDays,
+            card: {
+              id: nextCard.id,
+              question: nextCard.question,
+              answer: nextCard.answer,
+              source: nextCard.source ?? "Conteúdo cadastrado manualmente",
+              tags: nextCard.tags ?? [],
+              dueIn: this.formatDueIn(nextCard.next_review_date),
+            },
+          }
           : {
-              deckName: "Você está em dia!",
-              cardNumber: 0,
-              totalCards: 0,
-              streakInDays: user.streakInDays,
-              card: {
-                id: "",
-                question: "Nenhuma carta pendente no momento.",
-                answer: "Assim que novas cartas estiverem prontas, elas aparecerão aqui.",
-                source: "Agenda inteligente",
-                tags: [],
-                dueIn: "agora",
-              },
-            };
+            deckName: "Você está em dia!",
+            cardNumber: 0,
+            totalCards: 0,
+            streakInDays: user.streakInDays,
+            card: {
+              id: "",
+              question: "Nenhuma carta pendente no momento.",
+              answer: "Assim que novas cartas estiverem prontas, elas aparecerão aqui.",
+              source: "Agenda inteligente",
+              tags: [],
+              dueIn: "agora",
+            },
+          };
 
         return { user, session };
       });
@@ -319,36 +319,13 @@ export class AppController extends BaseApiController {
     }
   };
 
-  private renderAccount = async (_: Request, res: Response) => {
+  private renderAccount = async (req: Request, res: Response) => {
     try {
-      const data = await this.runInTransaction(async () => {
-        const { row: userRow, view: user } = await this.loadCurrentUser();
-        const integrations = await integrationModel.findMany({
-          limit: 50,
-          offset: 0,
-          params: [{ key: "user_id", value: userRow.id }],
-          orderByAsc: true,
-        });
-
-        return {
-          user,
-          preferences: {
-            reminderEmail: userRow.reminder_email ?? true,
-            reminderPush: userRow.reminder_push ?? true,
-            weeklySummary: userRow.weekly_summary ?? true,
-            aiSuggestions: userRow.ai_suggestions ?? false,
-          },
-          integrations: integrations.map((integration: any) => ({
-            id: integration.id,
-            name: integration.name,
-            connected: Boolean(integration.connected),
-          })),
-        };
-      });
-
       res.render("app/account", {
         title: "Minha conta",
-        ...data,
+        ... {
+          user: this.getAuthenticatedUser(req)
+        }
       });
     } catch (error) {
       this.handleRenderError(res, error);
