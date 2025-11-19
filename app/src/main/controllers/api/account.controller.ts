@@ -3,6 +3,25 @@ import { Application, Request, Response } from "express";
 import { BaseController } from "../base.controller.ts";
 import { InputField } from "../../../db/repository.ts";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
+
+const updateAccountSchema = z.object({
+  name: z.string().trim().min(1, "Informe um nome válido.").optional(),
+  email: z
+    .string()
+    .trim()
+    .email("Informe um e-mail válido.")
+    .transform((value) => value.toLowerCase())
+    .optional(),
+  password: z
+    .preprocess((value) => {
+      if (typeof value !== "string") {
+        return undefined;
+      }
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? undefined : trimmed;
+    }, z.string().min(6, "A senha deve ter ao menos 6 caracteres.").optional()),
+});
 
 export class AccountController extends BaseController {
   constructor(app: Application) {
@@ -20,45 +39,29 @@ export class AccountController extends BaseController {
       return;
     }
 
-    const updates: InputField[] = [];
-    const name = req.body?.name?.toString()?.trim();
-    const email = req.body?.email?.toString()?.trim()?.toLowerCase();
-    const password = req.body?.password?.toString()?.trim();
+    const parsedBody = this.validate(updateAccountSchema, req.body ?? {});
+    if (!parsedBody.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: parsedBody.message,
+        variant: "danger",
+      });
+      return;
+    }
 
-    if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "name")) {
-      if (!name) {
-        this.sendToastResponse(res, {
-          status: 400,
-          message: "Informe um nome válido.",
-          variant: "danger",
-        });
-        return;
-      }
+    const { name, email, password } = parsedBody.data;
+    const updates: InputField[] = [];
+
+    if (typeof name !== "undefined") {
       updates.push({ key: "name", value: name });
     }
 
-    if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "email")) {
-      if (!email) {
-        this.sendToastResponse(res, {
-          status: 400,
-          message: "Informe um e-mail válido.",
-          variant: "danger",
-        });
-        return;
-      }
+    if (typeof email !== "undefined") {
       updates.push({ key: "email", value: email });
     }
 
-    if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "password") && password.length > 0) {
-      if (password && password.length < 6) {
-        this.sendToastResponse(res, {
-          status: 400,
-          message: "A senha deve ter ao menos 6 caracteres.",
-          variant: "danger",
-        });
-        return;
-      }
-      updates.push({ key: "password", value: await bcrypt.hash(String(password), 10) });
+    if (typeof password !== "undefined") {
+      updates.push({ key: "password", value: await bcrypt.hash(password, 10) });
     }
 
     if (updates.length === 0) {
@@ -88,14 +91,33 @@ export class AccountController extends BaseController {
       return;
     }
 
+    const preferencesSchema = z.object({
+      reminderEmail: z.preprocess((value) => this.parseCheckbox(value), z.boolean()),
+      reminderPush: z.preprocess((value) => this.parseCheckbox(value), z.boolean()),
+      weeklySummary: z.preprocess((value) => this.parseCheckbox(value), z.boolean()),
+      aiSuggestions: z.preprocess((value) => this.parseCheckbox(value), z.boolean()),
+    });
+
+    const parsedBody = this.validate(preferencesSchema, req.body ?? {});
+    if (!parsedBody.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: parsedBody.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { reminderEmail, reminderPush, weeklySummary, aiSuggestions } = parsedBody.data;
+
     try {
       await userModel.update({
         id: user.id,
         fields: [
-          { key: "reminder_email", value: this.parseCheckbox(req.body?.reminderEmail) },
-          { key: "reminder_push", value: this.parseCheckbox(req.body?.reminderPush) },
-          { key: "weekly_summary", value: this.parseCheckbox(req.body?.weeklySummary) },
-          { key: "ai_suggestions", value: this.parseCheckbox(req.body?.aiSuggestions) },
+          { key: "reminder_email", value: reminderEmail },
+          { key: "reminder_push", value: reminderPush },
+          { key: "weekly_summary", value: weeklySummary },
+          { key: "ai_suggestions", value: aiSuggestions },
         ],
       });
 

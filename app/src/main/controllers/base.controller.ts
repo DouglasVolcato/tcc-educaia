@@ -1,4 +1,5 @@
 import { Application, Request, Response, Router } from "express";
+import type { ZodSchema } from "zod";
 import { TokenHandlerAdapter } from "../../adapters/token-handler-adapter.ts";
 import { SESSION_COOKIE_NAME } from "../../constants/session.ts";
 import { authMiddleware } from "../../controllers/middlewares/authMiddleware.ts";
@@ -161,6 +162,20 @@ export abstract class BaseController {
       message: "Ocorreu um erro inesperado. Tente novamente em instantes.",
       variant: "danger",
     });
+  }
+
+  protected validate<T>(schema: ZodSchema<T>, payload: unknown):
+    | { success: true; data: T }
+    | { success: false; message: string } {
+    const result = schema.safeParse(payload);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      return {
+        success: false,
+        message: issue?.message ?? "Os dados enviados são inválidos.",
+      };
+    }
+    return { success: true, data: result.data };
   }
 
   protected buildCardPreviewMarkup(cards: { question: string; answer: string }[]) {

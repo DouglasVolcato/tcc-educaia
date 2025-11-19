@@ -1,4 +1,5 @@
 import { Application, Request, Response } from "express";
+import { z } from "zod";
 import { BaseController } from "../base.controller.ts";
 import { flashcardModel, FlashcardRow } from "../../../db/models/flashcard.model.ts";
 
@@ -19,17 +20,24 @@ export class ReviewController extends BaseController {
       return;
     }
 
-    const cardId = req.body?.cardId?.toString();
-    const difficulty = this.normalizeDifficulty(req.body?.difficulty);
-
-    if (!cardId) {
+    const validation = this.validate(
+      z.object({
+        cardId: z.string().trim().uuid("Informe uma carta válida."),
+        difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+      }),
+      req.body ?? {},
+    );
+    if (!validation.success) {
       this.sendToastResponse(res, {
         status: 400,
-        message: "Informe a carta que deseja avaliar.",
+        message: validation.message,
         variant: "danger",
       });
       return;
     }
+
+    const { cardId, difficulty: providedDifficulty } = validation.data;
+    const difficulty = providedDifficulty ?? "medium";
 
     try {
       const card = (await flashcardModel.findOne({

@@ -1,4 +1,5 @@
 import { Application, Request, Response } from "express";
+import { z } from "zod";
 import { BaseController } from "../base.controller.ts";
 import { integrationModel } from "../../../db/models/integration.model.ts";
 
@@ -17,7 +18,39 @@ export class IntegrationController extends BaseController {
       return;
     }
 
-    const { integrationId } = req.params;
+    const paramsValidation = this.validate(
+      z.object({
+        integrationId: z.string().trim().uuid("Integração inválida."),
+      }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: paramsValidation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const bodyValidation = this.validate(
+      z.object({
+        connected: z.preprocess((value) => this.parseCheckbox(value), z.boolean()),
+        name: z.string().trim().min(1, "Informe um nome válido.").optional(),
+      }),
+      req.body ?? {},
+    );
+    if (!bodyValidation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: bodyValidation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { integrationId } = paramsValidation.data;
+    const { connected, name } = bodyValidation.data;
 
     try {
       const integration = await integrationModel.findOne({
@@ -39,8 +72,8 @@ export class IntegrationController extends BaseController {
       await integrationModel.update({
         id: integrationId,
         fields: [
-          { key: "connected", value: this.parseCheckbox(req.body?.connected) },
-          { key: "name", value: req.body?.name?.toString() ?? integration.name },
+          { key: "connected", value: connected },
+          { key: "name", value: name ?? integration.name },
         ],
       });
 

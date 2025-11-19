@@ -1,4 +1,5 @@
 import { Application, Request, Response } from "express";
+import { z } from "zod";
 import { BaseController } from "../base.controller.ts";
 import { deckModel } from "../../../db/models/deck.model.ts";
 import { flashcardModel, FlashcardRow } from "../../../db/models/flashcard.model.ts";
@@ -20,15 +21,6 @@ export class DecksController extends BaseController {
     this.router.post("/decks/:deckId/generate", this.handleGenerateCards);
   }
 
-  private buildDeckParams(req: Request) {
-    return {
-      name: req.body?.name?.toString()?.trim(),
-      description: req.body?.description?.toString()?.trim() ?? null,
-      subject: req.body?.subject?.toString()?.trim() ?? null,
-      tags: this.parseTags(req.body?.tags),
-    };
-  }
-
   private ensureDeckBelongsToUser(deckId: string, userId: string) {
     return deckModel.findOne({
       params: [
@@ -44,24 +36,34 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const params = this.buildDeckParams(req);
-    if (!params.name || !params.subject) {
+    const schema = z.object({
+      name: z.string().trim().min(1, "Informe o nome do baralho."),
+      description: z.string().trim().optional(),
+      subject: z.string().trim().min(1, "Informe o assunto do baralho."),
+      tags: z.preprocess((value) => this.parseTags(value), z.array(z.string())),
+    });
+
+    const validation = this.validate(schema, req.body ?? {});
+    if (!validation.success) {
       this.sendToastResponse(res, {
         status: 400,
-        message: "Informe ao menos o nome e o assunto do baralho.",
+        message: validation.message,
         variant: "danger",
       });
       return;
     }
 
+    const { name, description, subject, tags } = validation.data;
+    const normalizedDescription = description && description.length > 0 ? description : null;
+
     try {
       await deckModel.insert({
         fields: [
           { key: "id", value: UuidGeneratorAdapter.generate() },
-          { key: "name", value: params.name },
-          { key: "description", value: params.description },
-          { key: "subject", value: params.subject },
-          { key: "tags", value: params.tags },
+          { key: "name", value: name },
+          { key: "description", value: normalizedDescription },
+          { key: "subject", value: subject },
+          { key: "tags", value: tags },
           { key: "user_id", value: user.id },
         ],
       });
@@ -82,8 +84,50 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
+    const paramsValidation = this.validate(
+      z.object({ deckId: z.string().trim().uuid("Baralho inválido.") }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: paramsValidation.message,
+        variant: "danger",
+      });
+      return;
+    }
 
+    const schema = z.object({
+      name: z.string().trim().min(1, "O nome do baralho não pode ficar em branco.").optional(),
+      description: z
+        .string()
+        .trim()
+        .transform((value) => (value.length === 0 ? null : value))
+        .optional(),
+      subject: z.string().trim().min(1, "O assunto do baralho não pode ficar em branco.").optional(),
+      tags: z
+        .preprocess((value) => {
+          if (typeof value === "undefined") {
+            return undefined;
+          }
+          return this.parseTags(value);
+        }, z.array(z.string()))
+        .optional(),
+    });
+
+    const validation = this.validate(schema, req.body ?? {});
+    if (!validation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: validation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { deckId } = paramsValidation.data;
+    const { name, description, subject, tags } = validation.data;
+    
     try {
       const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
       if (!deck) {
@@ -95,31 +139,22 @@ export class DecksController extends BaseController {
         return;
       }
 
-      const params = this.buildDeckParams(req);
       const updates: InputField[] = [];
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "name")) {
-        if (!params.name) {
-          this.sendToastResponse(res, {
-            status: 400,
-            message: "O nome do baralho não pode ficar em branco.",
-            variant: "danger",
-          });
-          return;
-        }
-        updates.push({ key: "name", value: params.name });
+      if (typeof name !== "undefined") {
+        updates.push({ key: "name", value: name });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "description")) {
-        updates.push({ key: "description", value: params.description });
+      if (typeof description !== "undefined") {
+        updates.push({ key: "description", value: description });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "subject")) {
-        updates.push({ key: "subject", value: params.subject });
+      if (typeof subject !== "undefined") {
+        updates.push({ key: "subject", value: subject });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "tags")) {
-        updates.push({ key: "tags", value: params.tags });
+      if (typeof tags !== "undefined") {
+        updates.push({ key: "tags", value: tags });
       }
 
       if (updates.length === 0) {
@@ -152,7 +187,20 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
+    const paramsValidation = this.validate(
+      z.object({ deckId: z.string().trim().uuid("Baralho inválido.") }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: paramsValidation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { deckId } = paramsValidation.data;
     try {
       const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
       if (!deck) {
@@ -187,20 +235,41 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
-    const question = req.body?.question?.toString()?.trim();
-    const answer = req.body?.answer?.toString()?.trim();
-    const difficulty = this.normalizeDifficulty(req.body?.difficulty);
-    const tags = this.parseTags(req.body?.tags);
-
-    if (!question || !answer) {
+    const paramsValidation = this.validate(
+      z.object({ deckId: z.string().trim().uuid("Baralho inválido.") }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
       this.sendToastResponse(res, {
         status: 400,
-        message: "Informe pergunta e resposta para criar uma carta.",
+        message: paramsValidation.message,
         variant: "danger",
       });
       return;
     }
+
+    const schema = z.object({
+      question: z.string().trim().min(1, "Informe a pergunta."),
+      answer: z.string().trim().min(1, "Informe a resposta."),
+      difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+      tags: z.preprocess((value) => this.parseTags(value), z.array(z.string())),
+      source: z.string().trim().optional(),
+    });
+
+    const validation = this.validate(schema, req.body ?? {});
+    if (!validation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: validation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { deckId } = paramsValidation.data;
+    const { question, answer, difficulty, tags, source } = validation.data;
+    const normalizedDifficulty = difficulty ?? "medium";
+    const normalizedSource = source && source.length > 0 ? source : "Manual";
 
     try {
       const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
@@ -224,9 +293,9 @@ export class DecksController extends BaseController {
           { key: "review_count", value: 0 },
           { key: "last_review_date", value: null },
           { key: "next_review_date", value: null },
-          { key: "difficulty", value: difficulty },
+          { key: "difficulty", value: normalizedDifficulty },
           { key: "tags", value: tags },
-          { key: "source", value: req.body?.source?.toString() ?? "Manual" },
+          { key: "source", value: normalizedSource },
         ],
       });
 
@@ -246,7 +315,48 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId, cardId } = req.params;
+    const paramsValidation = this.validate(
+      z.object({
+        deckId: z.string().trim().uuid("Baralho inválido."),
+        cardId: z.string().trim().uuid("Carta inválida."),
+      }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: paramsValidation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const schema = z.object({
+      question: z.string().trim().min(1, "A pergunta não pode ficar vazia.").optional(),
+      answer: z.string().trim().min(1, "A resposta não pode ficar vazia.").optional(),
+      difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+      tags: z
+        .preprocess((value) => {
+          if (typeof value === "undefined") {
+            return undefined;
+          }
+          return this.parseTags(value);
+        }, z.array(z.string()))
+        .optional(),
+    });
+
+    const validation = this.validate(schema, req.body ?? {});
+    if (!validation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: validation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { deckId, cardId } = paramsValidation.data;
+    const { question, answer, difficulty, tags } = validation.data;
 
     try {
       const card = (await flashcardModel.findOne({
@@ -267,39 +377,20 @@ export class DecksController extends BaseController {
       }
 
       const updates: InputField[] = [];
-      const question = req.body?.question?.toString()?.trim();
-      const answer = req.body?.answer?.toString()?.trim();
-
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "question")) {
-        if (!question) {
-          this.sendToastResponse(res, {
-            status: 400,
-            message: "A pergunta não pode ficar vazia.",
-            variant: "danger",
-          });
-          return;
-        }
+      if (typeof question !== "undefined") {
         updates.push({ key: "question", value: question });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "answer")) {
-        if (!answer) {
-          this.sendToastResponse(res, {
-            status: 400,
-            message: "A resposta não pode ficar vazia.",
-            variant: "danger",
-          });
-          return;
-        }
+      if (typeof answer !== "undefined") {
         updates.push({ key: "answer", value: answer });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "difficulty")) {
-        updates.push({ key: "difficulty", value: this.normalizeDifficulty(req.body?.difficulty) });
+      if (typeof difficulty !== "undefined") {
+        updates.push({ key: "difficulty", value: difficulty });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "tags")) {
-        updates.push({ key: "tags", value: this.parseTags(req.body?.tags) });
+      if (typeof tags !== "undefined") {
+        updates.push({ key: "tags", value: tags });
       }
 
       if (updates.length === 0) {
@@ -329,7 +420,23 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId, cardId } = req.params;
+    const paramsValidation = this.validate(
+      z.object({
+        deckId: z.string().trim().uuid("Baralho inválido."),
+        cardId: z.string().trim().uuid("Carta inválida."),
+      }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
+      this.sendToastResponse(res, {
+        status: 400,
+        message: paramsValidation.message,
+        variant: "danger",
+      });
+      return;
+    }
+
+    const { deckId, cardId } = paramsValidation.data;
 
     try {
       const card = await flashcardModel.findOne({
@@ -373,16 +480,35 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
-    const content = req.body?.content?.toString()?.trim();
-
-    if (!content) {
+    const paramsValidation = this.validate(
+      z.object({ deckId: z.string().trim().uuid("Baralho inválido.") }),
+      req.params,
+    );
+    if (!paramsValidation.success) {
       res
         .status(400)
         .setHeader("Content-Type", "text/html; charset=utf-8")
-        .send('<div class="alert alert-danger" role="alert">Cole algum conteúdo para que possamos gerar sugestões.</div>');
+        .send(`<div class="alert alert-danger" role="alert">${paramsValidation.message}</div>`);
       return;
     }
+
+    const schema = z.object({
+      content: z.string().trim().min(1, "Cole algum conteúdo para que possamos gerar sugestões."),
+      createImmediately: z.preprocess((value) => this.parseCheckbox(value), z.boolean()),
+      goal: z.string().trim().optional(),
+    });
+
+    const validation = this.validate(schema, req.body ?? {});
+    if (!validation.success) {
+      res
+        .status(400)
+        .setHeader("Content-Type", "text/html; charset=utf-8")
+        .send(`<div class="alert alert-danger" role="alert">${validation.message}</div>`);
+      return;
+    }
+
+    const { deckId } = paramsValidation.data;
+    const { content, createImmediately, goal } = validation.data;
 
     try {
       const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
@@ -404,8 +530,6 @@ export class DecksController extends BaseController {
         answer: section.length > 280 ? `${section.slice(0, 277)}...` : section,
       }));
 
-      const createImmediately = this.parseCheckbox(req.body?.createImmediately);
-
       if (createImmediately && cards.length > 0) {
         for (const suggestion of cards) {
           await flashcardModel.insert({
@@ -423,7 +547,7 @@ export class DecksController extends BaseController {
               { key: "tags", value: [] },
               {
                 key: "source",
-                value: req.body?.goal?.toString() ? `Objetivo: ${req.body.goal}` : "Sugestão da IA",
+                value: goal && goal.length > 0 ? `Objetivo: ${goal}` : "Sugestão da IA",
               },
             ],
           });

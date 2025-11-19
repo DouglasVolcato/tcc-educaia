@@ -1,8 +1,37 @@
 import { Application, Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { BaseController } from "../base.controller.ts";
 import { usersModel } from "../../../db/models/users-model.ts";
 import { UuidGeneratorAdapter } from "../../../adapters/uuid-generator-adapter.ts";
+
+const registerSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "Informe seu primeiro nome."),
+    lastName: z.string().trim().min(1, "Informe seu sobrenome."),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Informe seu e-mail.")
+      .email("Informe um e-mail válido.")
+      .transform((value) => value.toLowerCase()),
+    password: z.string().min(6, "A senha deve ter ao menos 6 caracteres."),
+    confirmPassword: z.string().min(6, "Confirme sua senha com ao menos 6 caracteres."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas informadas não conferem.",
+    path: ["confirmPassword"],
+  });
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Informe seu e-mail.")
+    .email("Informe um e-mail válido.")
+    .transform((value) => value.toLowerCase()),
+  password: z.string().min(1, "Informe sua senha."),
+});
 
 export class AuthController extends BaseController {
   constructor(app: Application) {
@@ -15,27 +44,18 @@ export class AuthController extends BaseController {
   }
 
   private handleRegister = async (req: Request, res: Response) => {
-    const { firstName, lastName, email, password, confirmPassword } = req.body ?? {};
-
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    const parsedBody = this.validate(registerSchema, req.body ?? {});
+    if (!parsedBody.success) {
       this.sendToastResponse(res, {
         status: 400,
-        message: "Preencha todos os campos obrigatórios para criar sua conta.",
+        message: parsedBody.message,
         variant: "danger",
       });
       return;
     }
 
-    if (password !== confirmPassword) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "As senhas informadas não conferem.",
-        variant: "danger",
-      });
-      return;
-    }
-
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const { firstName, lastName, email, password } = parsedBody.data;
+    const normalizedEmail = email;
 
     try {
       const existingUser = await usersModel.findByEmail(normalizedEmail);
@@ -78,18 +98,18 @@ export class AuthController extends BaseController {
   };
 
   private handleLogin = async (req: Request, res: Response) => {
-    const { email, password } = req.body ?? {};
-
-    if (!email || !password) {
+    const parsedBody = this.validate(loginSchema, req.body ?? {});
+    if (!parsedBody.success) {
       this.sendToastResponse(res, {
         status: 400,
-        message: "Informe seu e-mail e senha para continuar.",
+        message: parsedBody.message,
         variant: "danger",
       });
       return;
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const { email, password } = parsedBody.data;
+    const normalizedEmail = email;
 
     try {
       const user = await usersModel.findByEmail(normalizedEmail);
