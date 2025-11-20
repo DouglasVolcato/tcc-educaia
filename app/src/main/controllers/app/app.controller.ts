@@ -59,6 +59,14 @@ export type ProgressIndicator = {
   trendValue: string;
 };
 
+export type ProgressSummary = {
+  metric: string;
+  value: string;
+  trend: "up" | "down" | "steady";
+  trendValue: string;
+  goal: string;
+};
+
 export class AppController extends BaseController {
   private static readonly WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
 
@@ -319,9 +327,9 @@ export class AppController extends BaseController {
         const { row: userRow, view: user } = await this.loadCurrentUser(req);
         const deckStats = await deckModel.findDecksWithStats({ userId: userRow.id });
         const decks = deckStats.map((deck) => this.mapDeckStatsToView(deck));
-        const historyRows = await flashcardModel.getReviewHistory({ userId: userRow.id, days: 6 });
-        const history = this.formatHistory(historyRows);
-        const focus = this.formatFocus(decks);
+      const historyRows = await flashcardModel.getReviewHistory({ userId: userRow.id, days: 6 });
+      const history = this.formatHistory(historyRows);
+      const focus = this.formatFocus(decks);
 
         const { total, mastered } = await flashcardModel.countByStatus({ userId: userRow.id });
         const accuracy = total === 0 ? 0 : Math.round((mastered / total) * 100);
@@ -366,7 +374,15 @@ export class AppController extends BaseController {
           },
         ];
 
-        return { user, indicators, history, focus };
+        const summary = this.buildProgressSummary({
+          history,
+          user,
+          accuracy,
+          dueToday,
+          indicators,
+        });
+
+        return { user, indicators, history, focus, summary };
       });
 
       res.render("app/progress", {
@@ -481,6 +497,61 @@ export class AppController extends BaseController {
       subject,
       percentage: Math.round((count / totalCards) * 100),
     }));
+  }
+
+  private buildProgressSummary(params: {
+    history: { reviewed: number; created: number }[];
+    user: { goalPerDay: number; streakInDays: number };
+    accuracy: number;
+    dueToday: number;
+    indicators: ProgressIndicator[];
+  }): ProgressSummary[] {
+    const { history, user, accuracy, dueToday, indicators } = params;
+
+    const weeklyGoal = Math.max(user.goalPerDay ?? 0, 0) * 7;
+    const totalReviewed = history.reduce((total, day) => total + day.reviewed, 0);
+    const totalCreated = history.reduce((total, day) => total + day.created, 0);
+
+    const getIndicator = (id: ProgressIndicator["id"]) =>
+      indicators.find((indicator) => indicator.id === id);
+
+    return [
+      {
+        metric: "Cartas revisadas",
+        value: `${totalReviewed}`,
+        trend: getIndicator("studied")?.trend ?? "steady",
+        trendValue: getIndicator("studied")?.trendValue ?? "estável",
+        goal: weeklyGoal > 0 ? `${weeklyGoal}` : "Defina uma meta diária",
+      },
+      {
+        metric: "Cartas criadas",
+        value: `${totalCreated}`,
+        trend: totalCreated > 0 ? "up" : "steady",
+        trendValue: totalCreated > 0 ? `+${totalCreated}` : "estável",
+        goal: weeklyGoal > 0 ? `${Math.max(Math.round(weeklyGoal * 0.25), 5)}` : "Defina uma meta diária",
+      },
+      {
+        metric: "Taxa de retenção",
+        value: `${accuracy}%`,
+        trend: getIndicator("accuracy")?.trend ?? "steady",
+        trendValue: getIndicator("accuracy")?.trendValue ?? "estável",
+        goal: "70% ou mais",
+      },
+      {
+        metric: "Revisões de hoje",
+        value: `${dueToday}`,
+        trend: getIndicator("due")?.trend ?? "steady",
+        trendValue: getIndicator("due")?.trendValue ?? "estável",
+        goal: user.goalPerDay > 0 ? `${user.goalPerDay} por dia` : "Defina sua meta diária",
+      },
+      {
+        metric: "Dias consecutivos",
+        value: `${user.streakInDays}`,
+        trend: getIndicator("streak")?.trend ?? "steady",
+        trendValue: getIndicator("streak")?.trendValue ?? "estável",
+        goal: "Mantenha a sequência",
+      },
+    ];
   }
 
   private formatDueIn(date: Date | string | null) {

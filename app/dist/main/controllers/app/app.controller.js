@@ -163,7 +163,8 @@ export class AppController extends BaseController {
             try {
                 const data = await this.runInTransaction(async () => {
                     const { row: userRow, view: user } = await this.loadCurrentUser(req);
-                    const [nextCard] = await flashcardModel.findDueCards({ userId: userRow.id, limit: 1 });
+                    const dueCards = await flashcardModel.findDueCards({ userId: userRow.id, limit: 5 });
+                    const [nextCard, ...upcomingCards] = dueCards;
                     const totalDue = await flashcardModel.countDueCards({ userId: userRow.id });
                     const session = nextCard
                         ? {
@@ -192,7 +193,12 @@ export class AppController extends BaseController {
                                 dueIn: "agora",
                             },
                         };
-                    return { user, session };
+                    const nextReviews = upcomingCards.map((card) => ({
+                        id: card.id,
+                        question: card.question,
+                        dueIn: this.formatDueIn(card.next_review_date),
+                    }));
+                    return { user, session, nextReviews };
                 });
                 res.render("app/review", {
                     title: "Revisão",
@@ -253,7 +259,14 @@ export class AppController extends BaseController {
                             trendValue: dueToday > 0 ? `-${Math.min(dueToday, 5)}` : "estável",
                         },
                     ];
-                    return { user, indicators, history, focus };
+                    const summary = this.buildProgressSummary({
+                        history,
+                        user,
+                        accuracy,
+                        dueToday,
+                        indicators,
+                    });
+                    return { user, indicators, history, focus, summary };
                 });
                 res.render("app/progress", {
                     title: "Indicadores",
@@ -372,6 +385,50 @@ export class AppController extends BaseController {
             subject,
             percentage: Math.round((count / totalCards) * 100),
         }));
+    }
+    buildProgressSummary(params) {
+        const { history, user, accuracy, dueToday, indicators } = params;
+        const weeklyGoal = Math.max(user.goalPerDay ?? 0, 0) * 7;
+        const totalReviewed = history.reduce((total, day) => total + day.reviewed, 0);
+        const totalCreated = history.reduce((total, day) => total + day.created, 0);
+        const getIndicator = (id) => indicators.find((indicator) => indicator.id === id);
+        return [
+            {
+                metric: "Cartas revisadas",
+                value: `${totalReviewed}`,
+                trend: getIndicator("studied")?.trend ?? "steady",
+                trendValue: getIndicator("studied")?.trendValue ?? "estável",
+                goal: weeklyGoal > 0 ? `${weeklyGoal}` : "Defina uma meta diária",
+            },
+            {
+                metric: "Cartas criadas",
+                value: `${totalCreated}`,
+                trend: totalCreated > 0 ? "up" : "steady",
+                trendValue: totalCreated > 0 ? `+${totalCreated}` : "estável",
+                goal: weeklyGoal > 0 ? `${Math.max(Math.round(weeklyGoal * 0.25), 5)}` : "Defina uma meta diária",
+            },
+            {
+                metric: "Taxa de retenção",
+                value: `${accuracy}%`,
+                trend: getIndicator("accuracy")?.trend ?? "steady",
+                trendValue: getIndicator("accuracy")?.trendValue ?? "estável",
+                goal: "70% ou mais",
+            },
+            {
+                metric: "Revisões de hoje",
+                value: `${dueToday}`,
+                trend: getIndicator("due")?.trend ?? "steady",
+                trendValue: getIndicator("due")?.trendValue ?? "estável",
+                goal: user.goalPerDay > 0 ? `${user.goalPerDay} por dia` : "Defina sua meta diária",
+            },
+            {
+                metric: "Dias consecutivos",
+                value: `${user.streakInDays}`,
+                trend: getIndicator("streak")?.trend ?? "steady",
+                trendValue: getIndicator("streak")?.trendValue ?? "estável",
+                goal: "Mantenha a sequência",
+            },
+        ];
     }
     formatDueIn(date) {
         if (!date) {
