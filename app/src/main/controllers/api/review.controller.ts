@@ -64,6 +64,9 @@ export class ReviewController extends BaseController {
         ],
       });
 
+      // Force the review page to refresh so the next card is displayed immediately
+      res.setHeader("HX-Refresh", "true");
+
       this.sendToastResponse(res, {
         status: 200,
         message: "Progresso registrado! Continue avançando.",
