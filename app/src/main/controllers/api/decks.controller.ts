@@ -230,7 +230,6 @@ export class DecksController extends BaseController {
           { key: "next_review_date", value: null },
           { key: "difficulty", value: difficulty },
           { key: "tags", value: tags },
-          { key: "source", value: req.body?.source?.toString() ?? "Manual" },
         ],
       });
 
@@ -408,46 +407,28 @@ export class DecksController extends BaseController {
         tone,
       });
 
-      const createImmediately = this.parseCheckbox(req.body?.createImmediately);
-
-      if (createImmediately && cards.length > 0) {
-        for (const suggestion of cards) {
-          await flashcardModel.insert({
-            fields: [
-              { key: "id", value: UuidGeneratorAdapter.generate() },
-              { key: "question", value: suggestion.question },
-              { key: "answer", value: suggestion.answer },
-              { key: "user_id", value: user.id },
-              { key: "deck_id", value: deckId },
-              { key: "status", value: "new" },
-              { key: "review_count", value: 0 },
-              { key: "last_review_date", value: null },
-              { key: "next_review_date", value: null },
-              { key: "difficulty", value: suggestion.difficulty ?? "medium" },
-              { key: "tags", value: suggestion.tags ?? [] },
-              {
-                key: "source",
-                value:
-                  suggestion.source ??
-                  (goal ? `Objetivo: ${goal}` : "Sugestão da IA"),
-              },
-            ],
-          });
-        }
-
-        res
-          .status(200)
-          .setHeader("Content-Type", "text/html; charset=utf-8")
-          .send(
-            `<div class="alert alert-success" role="alert">${cards.length} flashcards foram adicionados diretamente ao baralho.</div>`,
-          );
-        return;
+      for (const suggestion of cards) {
+        await flashcardModel.insert({
+          fields: [
+            { key: "id", value: UuidGeneratorAdapter.generate() },
+            { key: "question", value: suggestion.question },
+            { key: "answer", value: suggestion.answer },
+            { key: "user_id", value: user.id },
+            { key: "deck_id", value: deckId },
+            { key: "status", value: "new" },
+            { key: "review_count", value: 0 },
+            { key: "last_review_date", value: null },
+            { key: "next_review_date", value: null },
+            { key: "difficulty", value: suggestion.difficulty ?? "medium" },
+            { key: "tags", value: suggestion.tags ?? [] },
+          ],
+        });
       }
 
       res
-        .status(200)
+        .status(201)
         .setHeader("Content-Type", "text/html; charset=utf-8")
-        .send(this.buildCardPreviewMarkup(cards));
+        .send(this.buildCardPreviewMarkup(deck.id, cards));
     } catch (error) {
       console.error("Failed to generate AI suggestion", error);
       res
@@ -464,33 +445,12 @@ export class DecksController extends BaseController {
     goal?: string | null;
     tone?: "concise" | "standard" | "deep";
   }) {
-    if (this.isAiConfigured()) {
-      try {
-        const result = await this.cardGenerator.generateCards(input);
-        if (result.cards.length > 0) {
-          return result.cards;
-        }
-      } catch (error) {
-        console.error("Failed to generate cards with AI", error);
-      }
+    const result = await this.cardGenerator.generateCards(input);
+    if (result.cards.length > 0) {
+      return result.cards;
+    } else {
+      throw new Error("Erro ao gerar flashcards.");
     }
-
-    const sections = input.content
-      .split(/\n+/)
-      .map((section: string) => section.trim())
-      .filter((section: string) => section.length > 0);
-
-    return sections.slice(0, 3).map((section: string) => ({
-      question: `Qual é o conceito principal sobre "${section.slice(0, 60)}"?`,
-      answer: section.length > 280 ? `${section.slice(0, 277)}...` : section,
-      difficulty: "medium" as const,
-      tags: [],
-      source: input.goal ? `Objetivo: ${input.goal}` : "Sugestão da IA",
-    }));
-  }
-
-  private isAiConfigured() {
-    return Boolean(process.env.OPENAI_KEY && process.env.OPENAI_MODEL);
   }
 
   private normalizeTone(value: unknown): "concise" | "standard" | "deep" {

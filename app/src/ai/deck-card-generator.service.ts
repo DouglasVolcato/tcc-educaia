@@ -1,12 +1,11 @@
-import { LlmAgent, MessageSenderEnum } from "./agent";
-import { FlashcardFormatterTool } from "./tools/flashcard-formatter.tool";
+import { LlmAgent, MessageSenderEnum } from "./agent.ts";
+import { FlashcardFormatterTool } from "./tools/flashcard-formatter.tool.ts";
 
 export type GeneratedFlashcard = {
   question: string;
   answer: string;
   difficulty: "easy" | "medium" | "hard";
   tags: string[];
-  source?: string;
 };
 
 type GenerateCardsInput = {
@@ -15,7 +14,6 @@ type GenerateCardsInput = {
   goal?: string | null;
   tone?: "concise" | "standard" | "deep";
   content: string;
-  limit?: number;
 };
 
 type GenerateCardsOutput = {
@@ -35,23 +33,16 @@ export class DeckCardGeneratorService {
     const toolInstance = tool.getInstance();
     agent.addTool(toolInstance);
 
-    const maxCards = Math.min(Math.max(input.limit ?? 6, 3), 10);
-
     agent.addMessage({
       role: MessageSenderEnum.SYSTEM,
       content:
-        "Você é um especialista em educação que cria flashcards estilo pergunta e resposta para revisão espaçada. Foque em informações importantes, contexto claro e linguagem em português brasileiro.",
-    });
-
-    agent.addMessage({
-      role: MessageSenderEnum.SYSTEM,
-      content:
-        "Sempre retorne o resultado final chamando a ferramenta format_flashcards. Ela recebe um array com os flashcards e garante que tudo esteja pronto para ser importado pelo aplicativo.",
+        `Você é um especialista em educação que cria flashcards estilo pergunta e resposta para revisão espaçada. Foque em informações importantes, contexto claro e linguagem em português brasileiro.
+        Sempre retorne o resultado final chamando a ferramenta format_flashcards. Ela recebe um array com os flashcards e garante que tudo esteja pronto para ser importado pelo aplicativo.`,
     });
 
     agent.addMessage({
       role: MessageSenderEnum.USER,
-      content: this.buildPrompt({ ...input, limit: maxCards }),
+      content: this.buildPrompt({ ...input }),
     });
 
     const response = await agent.getResponse();
@@ -60,7 +51,7 @@ export class DeckCardGeneratorService {
     );
 
     if (!toolCall) {
-      throw new Error("A IA não retornou sugestões válidas de flashcards.");
+      throw new Error("Erro ao gerar flashcards: " + response.response);
     }
 
     const parsed = FlashcardFormatterTool.parse(toolCall.input);
@@ -69,13 +60,12 @@ export class DeckCardGeneratorService {
       answer: card.answer.trim(),
       difficulty: card.difficulty ?? "medium",
       tags: card.tags ?? [],
-      source: card.source?.trim() || undefined,
     }));
 
     return { cards };
   }
 
-  private buildPrompt(input: GenerateCardsInput & { limit: number }) {
+  private buildPrompt(input: GenerateCardsInput) {
     const goal = input.goal?.trim() || "Não informado";
     const toneMap: Record<Required<GenerateCardsInput>["tone"], string> = {
       concise: "Seja direto e destaque apenas os pontos indispensáveis.",
@@ -89,7 +79,6 @@ export class DeckCardGeneratorService {
 - Nome: ${input.deckName}
 - Assunto central: ${input.deckSubject}
 - Objetivo do estudante: ${goal}
-- Quantidade desejada: entre 3 e ${input.limit} flashcards
 
 ${toneInstruction}
 

@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { LlmTool, LlmToolType } from "../tool";
+import { LlmTool, LlmToolType } from "../tool.ts";
 
 export type FlashcardSuggestion = {
   question: string;
   answer: string;
   difficulty?: "easy" | "medium" | "hard";
   tags?: string[];
-  source?: string;
 };
 
 export type FlashcardFormatterInput = {
@@ -35,7 +34,6 @@ export class FlashcardFormatterTool extends LlmTool {
       .array(z.string().min(1).max(40))
       .max(4)
       .default([]),
-    source: z.string().max(120).optional(),
   });
 
   private static readonly schema = z.object({
