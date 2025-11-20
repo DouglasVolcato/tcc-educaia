@@ -146,6 +146,32 @@ describe("DbConnection", () => {
             expect(rollbackSpy).toHaveBeenCalledWith("ROLLBACK");
             expect(releaseSpy).toHaveBeenCalledTimes(1);
         });
+
+        test("Should reuse the current transaction client when nested", async () => {
+            const beginSpy = jest.fn().mockResolvedValue(undefined);
+            const commitSpy = jest.fn().mockResolvedValue(undefined);
+            const releaseSpy = jest.fn().mockResolvedValue(undefined);
+            const pool = {
+                connect: jest.fn().mockResolvedValue({
+                    query: jest
+                        .fn()
+                        .mockImplementationOnce(beginSpy)
+                        .mockImplementationOnce(commitSpy),
+                    release: releaseSpy,
+                }),
+            } as unknown as Pool;
+
+            (DbConnection as any).pool = pool;
+
+            await DbConnection.runInTransaction(async () => {
+                await DbConnection.runInTransaction(async () => FakeData.numberInteger());
+            });
+
+            expect(pool.connect).toHaveBeenCalledTimes(1);
+            expect(beginSpy).toHaveBeenCalledWith("BEGIN");
+            expect(commitSpy).toHaveBeenCalledWith("COMMIT");
+            expect(releaseSpy).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe("Query", () => {

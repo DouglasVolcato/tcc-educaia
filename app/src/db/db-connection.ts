@@ -40,6 +40,12 @@ export class DbConnection {
     }
 
     public static async runInTransaction<T>(handler: () => Promise<T>) {
+        const existingClient = DbConnection.transactionContext.getStore();
+
+        if (existingClient) {
+            return handler();
+        }
+
         const pool = DbConnection.ensurePool();
         const client = await pool.connect();
 
