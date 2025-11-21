@@ -3,6 +3,29 @@ import { Application, Request, Response } from "express";
 import { BaseController } from "../base.controller.ts";
 import { InputField } from "../../../db/repository.ts";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
+
+const updateAccountSchema = z
+  .object({
+    name: z.string().trim().min(1, "Informe um nome válido.").optional(),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Informe um e-mail válido.")
+      .optional(),
+    password: z.string().trim().min(6, "A senha deve ter ao menos 6 caracteres.").optional(),
+  })
+  .refine((data) => data.name || data.email || data.password, {
+    message: "Informe ao menos um campo para atualizar.",
+  });
+
+const updatePreferencesSchema = z.object({
+  reminderEmail: z.boolean().default(false),
+  reminderPush: z.boolean().default(false),
+  weeklySummary: z.boolean().default(false),
+  aiSuggestions: z.boolean().default(false),
+});
 
 export class AccountController extends BaseController {
   constructor(app: Application) {
@@ -20,45 +43,23 @@ export class AccountController extends BaseController {
       return;
     }
 
+    const payload = this.validate(updateAccountSchema, req.body ?? {}, res);
+    if (!payload) {
+      return;
+    }
+
     const updates: InputField[] = [];
-    const name = req.body?.name?.toString()?.trim();
-    const email = req.body?.email?.toString()?.trim()?.toLowerCase();
-    const password = req.body?.password?.toString()?.trim();
 
-    if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "name")) {
-      if (!name) {
-        this.sendToastResponse(res, {
-          status: 400,
-          message: "Informe um nome válido.",
-          variant: "danger",
-        });
-        return;
-      }
-      updates.push({ key: "name", value: name });
+    if (payload.name) {
+      updates.push({ key: "name", value: payload.name });
     }
 
-    if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "email")) {
-      if (!email) {
-        this.sendToastResponse(res, {
-          status: 400,
-          message: "Informe um e-mail válido.",
-          variant: "danger",
-        });
-        return;
-      }
-      updates.push({ key: "email", value: email });
+    if (payload.email) {
+      updates.push({ key: "email", value: payload.email });
     }
 
-    if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "password") && password.length > 0) {
-      if (password && password.length < 6) {
-        this.sendToastResponse(res, {
-          status: 400,
-          message: "A senha deve ter ao menos 6 caracteres.",
-          variant: "danger",
-        });
-        return;
-      }
-      updates.push({ key: "password", value: await bcrypt.hash(String(password), 10) });
+    if (payload.password) {
+      updates.push({ key: "password", value: await bcrypt.hash(payload.password, 10) });
     }
 
     if (updates.length === 0) {
@@ -88,14 +89,29 @@ export class AccountController extends BaseController {
       return;
     }
 
+    const payload = this.validate(
+      updatePreferencesSchema.transform((values) => ({
+        reminderEmail: this.parseCheckbox(values.reminderEmail),
+        reminderPush: this.parseCheckbox(values.reminderPush),
+        weeklySummary: this.parseCheckbox(values.weeklySummary),
+        aiSuggestions: this.parseCheckbox(values.aiSuggestions),
+      })),
+      req.body ?? {},
+      res,
+    );
+
+    if (!payload) {
+      return;
+    }
+
     try {
       await userModel.update({
         id: user.id,
         fields: [
-          { key: "reminder_email", value: this.parseCheckbox(req.body?.reminderEmail) },
-          { key: "reminder_push", value: this.parseCheckbox(req.body?.reminderPush) },
-          { key: "weekly_summary", value: this.parseCheckbox(req.body?.weeklySummary) },
-          { key: "ai_suggestions", value: this.parseCheckbox(req.body?.aiSuggestions) },
+          { key: "reminder_email", value: payload.reminderEmail },
+          { key: "reminder_push", value: payload.reminderPush },
+          { key: "weekly_summary", value: payload.weeklySummary },
+          { key: "ai_suggestions", value: payload.aiSuggestions },
         ],
       });
 

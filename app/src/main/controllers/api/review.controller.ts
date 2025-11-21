@@ -1,6 +1,12 @@
 import { Application, Request, Response } from "express";
 import { BaseController } from "../base.controller.ts";
 import { flashcardModel, FlashcardRow } from "../../../db/models/flashcard.model.ts";
+import { z } from "zod";
+
+const gradeSchema = z.object({
+  cardId: z.string().uuid("Informe a carta que deseja avaliar."),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+});
 
 export class ReviewController extends BaseController {
   constructor(app: Application) {
@@ -19,22 +25,23 @@ export class ReviewController extends BaseController {
       return;
     }
 
-    const cardId = req.body?.cardId?.toString();
-    const difficulty = this.normalizeDifficulty(req.body?.difficulty);
+    const payload = this.validate(
+      gradeSchema.transform((values) => ({
+        cardId: values.cardId,
+        difficulty: this.normalizeDifficulty(values.difficulty),
+      })),
+      req.body ?? {},
+      res,
+    );
 
-    if (!cardId) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "Informe a carta que deseja avaliar.",
-        variant: "danger",
-      });
+    if (!payload) {
       return;
     }
 
     try {
       const card = (await flashcardModel.findOne({
         params: [
-          { key: "id", value: cardId },
+          { key: "id", value: payload.cardId },
           { key: "user_id", value: user.id },
         ],
       })) as FlashcardRow | null;
@@ -49,15 +56,15 @@ export class ReviewController extends BaseController {
       }
 
       const nextReview = this.computeNextReviewDate(
-        difficulty,
+        payload.difficulty,
         card.review_count ?? 0,
       );
 
       await flashcardModel.update({
-        id: cardId,
+        id: payload.cardId,
         fields: [
-          { key: "difficulty", value: difficulty },
-          { key: "status", value: difficulty === "easy" ? "mastered" : "learning" },
+          { key: "difficulty", value: payload.difficulty },
+          { key: "status", value: payload.difficulty === "easy" ? "mastered" : "learning" },
           { key: "review_count", value: (card.review_count ?? 0) + 1 },
           { key: "last_review_date", value: new Date() },
           { key: "next_review_date", value: nextReview },

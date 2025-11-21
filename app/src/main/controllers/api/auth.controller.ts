@@ -3,6 +3,25 @@ import bcrypt from "bcryptjs";
 import { BaseController } from "../base.controller.ts";
 import { usersModel } from "../../../db/models/users-model.ts";
 import { UuidGeneratorAdapter } from "../../../adapters/uuid-generator-adapter.ts";
+import { z } from "zod";
+
+const registerSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "Informe seu primeiro nome."),
+    lastName: z.string().trim().min(1, "Informe seu sobrenome."),
+    email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
+    password: z.string().min(6, "A senha deve ter ao menos 6 caracteres."),
+    confirmPassword: z.string().min(6, "Repita a senha para continuar."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas informadas não conferem.",
+    path: ["confirmPassword"],
+  });
+
+const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
+  password: z.string().min(1, "Informe sua senha para continuar."),
+});
 
 export class AuthController extends BaseController {
   constructor(app: Application) {
@@ -15,30 +34,13 @@ export class AuthController extends BaseController {
   }
 
   private handleRegister = async (req: Request, res: Response) => {
-    const { firstName, lastName, email, password, confirmPassword } = req.body ?? {};
-
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "Preencha todos os campos obrigatórios para criar sua conta.",
-        variant: "danger",
-      });
+    const payload = this.validate(registerSchema, req.body ?? {}, res);
+    if (!payload) {
       return;
     }
-
-    if (password !== confirmPassword) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "As senhas informadas não conferem.",
-        variant: "danger",
-      });
-      return;
-    }
-
-    const normalizedEmail = String(email).trim().toLowerCase();
 
     try {
-      const existingUser = await usersModel.findByEmail(normalizedEmail);
+      const existingUser = await usersModel.findByEmail(payload.email);
       if (existingUser) {
         this.sendToastResponse(res, {
           status: 409,
@@ -48,13 +50,13 @@ export class AuthController extends BaseController {
         return;
       }
 
-      const hashedPassword = await bcrypt.hash(String(password), 10);
+      const hashedPassword = await bcrypt.hash(String(payload.password), 10);
       const id = UuidGeneratorAdapter.generate();
 
       await usersModel.createUser({
         id,
-        name: `${String(firstName).trim()} ${String(lastName).trim()}`.trim(),
-        email: normalizedEmail,
+        name: `${payload.firstName} ${payload.lastName}`.trim(),
+        email: payload.email,
         password: hashedPassword,
       });
 
@@ -78,21 +80,13 @@ export class AuthController extends BaseController {
   };
 
   private handleLogin = async (req: Request, res: Response) => {
-    const { email, password } = req.body ?? {};
-
-    if (!email || !password) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "Informe seu e-mail e senha para continuar.",
-        variant: "danger",
-      });
+    const payload = this.validate(loginSchema, req.body ?? {}, res);
+    if (!payload) {
       return;
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
-
     try {
-      const user = await usersModel.findByEmail(normalizedEmail);
+      const user = await usersModel.findByEmail(payload.email);
       if (!user) {
         this.sendToastResponse(res, {
           status: 401,
@@ -102,7 +96,7 @@ export class AuthController extends BaseController {
         return;
       }
 
-      const isValidPassword = await bcrypt.compare(String(password), user.password);
+      const isValidPassword = await bcrypt.compare(String(payload.password), user.password);
       if (!isValidPassword) {
         this.sendToastResponse(res, {
           status: 401,

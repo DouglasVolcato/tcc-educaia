@@ -1,6 +1,16 @@
 import { Application, Request, Response } from "express";
 import { BaseController } from "../base.controller.ts";
 import { integrationModel } from "../../../db/models/integration.model.ts";
+import { z } from "zod";
+
+const integrationParamsSchema = z.object({
+  integrationId: z.string().uuid("Identificador de integração inválido."),
+});
+
+const integrationBodySchema = z.object({
+  connected: z.boolean().default(false),
+  name: z.string().trim().min(1, "Informe um nome para a integração.").optional(),
+});
 
 export class IntegrationController extends BaseController {
   constructor(app: Application) {
@@ -17,12 +27,28 @@ export class IntegrationController extends BaseController {
       return;
     }
 
-    const { integrationId } = req.params;
+    const params = this.validate(integrationParamsSchema, req.params, res);
+    if (!params) {
+      return;
+    }
+
+    const payload = this.validate(
+      integrationBodySchema.transform((values) => ({
+        connected: this.parseCheckbox(values.connected),
+        name: values.name,
+      })),
+      req.body ?? {},
+      res,
+    );
+
+    if (!payload) {
+      return;
+    }
 
     try {
       const integration = await integrationModel.findOne({
         params: [
-          { key: "id", value: integrationId },
+          { key: "id", value: params.integrationId },
           { key: "user_id", value: user.id },
         ],
       });
@@ -37,10 +63,10 @@ export class IntegrationController extends BaseController {
       }
 
       await integrationModel.update({
-        id: integrationId,
+        id: params.integrationId,
         fields: [
-          { key: "connected", value: this.parseCheckbox(req.body?.connected) },
-          { key: "name", value: req.body?.name?.toString() ?? integration.name },
+          { key: "connected", value: payload.connected },
+          { key: "name", value: payload.name ?? integration.name },
         ],
       });
 

@@ -5,6 +5,7 @@ import { flashcardModel, FlashcardRow } from "../../../db/models/flashcard.model
 import { InputField } from "../../../db/repository.ts";
 import { UuidGeneratorAdapter } from "../../../adapters/uuid-generator-adapter.ts";
 import { DeckCardGeneratorService } from "../../../ai/deck-card-generator.service.ts";
+import { z } from "zod";
 
 export class DecksController extends BaseController {
   private readonly cardGenerator: DeckCardGeneratorService;
@@ -12,6 +13,80 @@ export class DecksController extends BaseController {
   constructor(app: Application) {
     super(app);
     this.cardGenerator = new DeckCardGeneratorService();
+  }
+
+  private getDeckParamsSchema() {
+    return z.object({
+      deckId: z.string().uuid("Baralho não encontrado."),
+    });
+  }
+
+  private getCardParamsSchema() {
+    return z.object({
+      deckId: z.string().uuid("Baralho não encontrado."),
+      cardId: z.string().uuid("Carta não encontrada."),
+    });
+  }
+
+  private getDeckPayloadSchema(requireNameAndSubject = false) {
+    const baseSchema = z.object({
+      name: z.string().trim().min(1, "O nome do baralho não pode ficar em branco.").optional(),
+      description: z
+        .string()
+        .trim()
+        .optional()
+        .transform((value) => (value && value.length > 0 ? value : null)),
+      subject: z.string().trim().min(1, "Informe o assunto do baralho.").optional(),
+      tags: this.buildTagsSchema({ defaultEmpty: requireNameAndSubject }),
+    });
+
+    if (!requireNameAndSubject) {
+      return baseSchema;
+    }
+
+    return baseSchema.superRefine((values, ctx) => {
+      if (!values.name) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "O nome do baralho não pode ficar em branco." });
+      }
+
+      if (!values.subject) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe o assunto do baralho." });
+      }
+    });
+  }
+
+  private getCardCreationSchema() {
+    return z.object({
+      question: z.string().trim().min(1, "Informe a pergunta para criar a carta."),
+      answer: z.string().trim().min(1, "Informe a resposta para criar a carta."),
+      difficulty: this.buildDifficultySchema(),
+      tags: this.buildTagsSchema(),
+    });
+  }
+
+  private getCardUpdateSchema() {
+    return z.object({
+      question: z.string().trim().min(1, "A pergunta não pode ficar vazia.").optional(),
+      answer: z.string().trim().min(1, "A resposta não pode ficar vazia.").optional(),
+      difficulty: this.buildDifficultySchema({ defaultToMedium: false }),
+      tags: this.buildTagsSchema({ defaultEmpty: false }),
+      nextReviewDate: z
+        .string()
+        .datetime({ message: "Informe uma data válida para a próxima revisão." })
+        .optional()
+        .transform((value) => (value ? new Date(value) : undefined)),
+    });
+  }
+
+  private getCardGenerationSchema() {
+    return z.object({
+      content: z.string().trim().min(1, "Cole algum conteúdo para gerar sugestões."),
+      goal: z.string().trim().optional().transform((value) => (value && value.length > 0 ? value : null)),
+      tone: z
+        .enum(["concise", "standard", "deep"])
+        .optional()
+        .transform((value) => this.normalizeTone(value)),
+    });
   }
 
   protected registerRoutes(): void {
@@ -23,15 +98,6 @@ export class DecksController extends BaseController {
     this.router.delete("/decks/:deckId/cards/:cardId", this.handleDeleteCard);
     this.router.post("/decks/:deckId/cards/:cardId/move-to-review", this.handleMoveCardToReview);
     this.router.post("/decks/:deckId/generate", this.handleGenerateCards);
-  }
-
-  private buildDeckParams(req: Request) {
-    return {
-      name: req.body?.name?.toString()?.trim(),
-      description: req.body?.description?.toString()?.trim() ?? null,
-      subject: req.body?.subject?.toString()?.trim() ?? null,
-      tags: this.parseTags(req.body?.tags),
-    };
   }
 
   private ensureDeckBelongsToUser(deckId: string, userId: string) {
@@ -49,13 +115,8 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const params = this.buildDeckParams(req);
-    if (!params.name || !params.subject) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "Informe ao menos o nome e o assunto do baralho.",
-        variant: "danger",
-      });
+    const payload = this.validate(this.getDeckPayloadSchema(true), req.body ?? {}, res);
+    if (!payload) {
       return;
     }
 
@@ -63,10 +124,10 @@ export class DecksController extends BaseController {
       await deckModel.insert({
         fields: [
           { key: "id", value: UuidGeneratorAdapter.generate() },
-          { key: "name", value: params.name },
-          { key: "description", value: params.description },
-          { key: "subject", value: params.subject },
-          { key: "tags", value: params.tags },
+          { key: "name", value: payload.name ?? null },
+          { key: "description", value: payload.description ?? null },
+          { key: "subject", value: payload.subject ?? null },
+          { key: "tags", value: payload.tags ?? [] },
           { key: "user_id", value: user.id },
         ],
       });
@@ -87,10 +148,13 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
+    const params = this.validate(this.getDeckParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
 
     try {
-      const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
+      const deck = await this.ensureDeckBelongsToUser(params.deckId, user.id);
       if (!deck) {
         this.sendToastResponse(res, {
           status: 404,
@@ -100,31 +164,26 @@ export class DecksController extends BaseController {
         return;
       }
 
-      const params = this.buildDeckParams(req);
+      const payload = this.validate(this.getDeckPayloadSchema(), req.body ?? {}, res);
+      if (!payload) {
+        return;
+      }
       const updates: InputField[] = [];
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "name")) {
-        if (!params.name) {
-          this.sendToastResponse(res, {
-            status: 400,
-            message: "O nome do baralho não pode ficar em branco.",
-            variant: "danger",
-          });
-          return;
-        }
-        updates.push({ key: "name", value: params.name });
+      if (payload.name !== undefined) {
+        updates.push({ key: "name", value: payload.name });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "description")) {
-        updates.push({ key: "description", value: params.description });
+      if (payload.description !== undefined) {
+        updates.push({ key: "description", value: payload.description });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "subject")) {
-        updates.push({ key: "subject", value: params.subject });
+      if (payload.subject !== undefined) {
+        updates.push({ key: "subject", value: payload.subject });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "tags")) {
-        updates.push({ key: "tags", value: params.tags });
+      if (payload.tags !== undefined) {
+        updates.push({ key: "tags", value: payload.tags });
       }
 
       if (updates.length === 0) {
@@ -137,7 +196,7 @@ export class DecksController extends BaseController {
       }
 
       await deckModel.update({
-        id: deckId,
+        id: params.deckId,
         fields: updates,
       });
 
@@ -157,9 +216,12 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
+    const params = this.validate(this.getDeckParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
     try {
-      const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
+      const deck = await this.ensureDeckBelongsToUser(params.deckId, user.id);
       if (!deck) {
         this.sendToastResponse(res, {
           status: 404,
@@ -171,14 +233,14 @@ export class DecksController extends BaseController {
 
       await flashcardModel.delete({
         params: [
-          { key: "deck_id", value: deckId },
+          { key: "deck_id", value: params.deckId },
           { key: "user_id", value: user.id },
         ],
       });
 
       await deckModel.delete({
         params: [
-          { key: "id", value: deckId },
+          { key: "id", value: params.deckId },
           { key: "user_id", value: user.id },
         ],
       });
@@ -199,23 +261,18 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
-    const question = req.body?.question?.toString()?.trim();
-    const answer = req.body?.answer?.toString()?.trim();
-    const difficulty = this.normalizeDifficulty(req.body?.difficulty);
-    const tags = this.parseTags(req.body?.tags);
+    const params = this.validate(this.getDeckParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
 
-    if (!question || !answer) {
-      this.sendToastResponse(res, {
-        status: 400,
-        message: "Informe pergunta e resposta para criar uma carta.",
-        variant: "danger",
-      });
+    const payload = this.validate(this.getCardCreationSchema(), req.body ?? {}, res);
+    if (!payload) {
       return;
     }
 
     try {
-      const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
+      const deck = await this.ensureDeckBelongsToUser(params.deckId, user.id);
       if (!deck) {
         this.sendToastResponse(res, {
           status: 404,
@@ -228,15 +285,15 @@ export class DecksController extends BaseController {
       await flashcardModel.insert({
         fields: [
           { key: "id", value: UuidGeneratorAdapter.generate() },
-          { key: "question", value: question },
-          { key: "answer", value: answer },
+          { key: "question", value: payload.question },
+          { key: "answer", value: payload.answer },
           { key: "user_id", value: user.id },
-          { key: "deck_id", value: deckId },
+          { key: "deck_id", value: params.deckId },
           { key: "status", value: "new" },
           { key: "review_count", value: 0 },
           { key: "last_review_date", value: null },
-          { key: "difficulty", value: difficulty },
-          { key: "tags", value: tags },
+          { key: "difficulty", value: payload.difficulty },
+          { key: "tags", value: payload.tags ?? [] },
         ],
       });
 
@@ -256,13 +313,21 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId, cardId } = req.params;
+    const params = this.validate(this.getCardParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
+
+    const payload = this.validate(this.getCardUpdateSchema(), req.body ?? {}, res);
+    if (!payload) {
+      return;
+    }
 
     try {
       const card = (await flashcardModel.findOne({
         params: [
-          { key: "id", value: cardId },
-          { key: "deck_id", value: deckId },
+          { key: "id", value: params.cardId },
+          { key: "deck_id", value: params.deckId },
           { key: "user_id", value: user.id },
         ],
       })) as FlashcardRow | null;
@@ -277,44 +342,25 @@ export class DecksController extends BaseController {
       }
 
       const updates: InputField[] = [];
-      const question = req.body?.question?.toString()?.trim();
-      const answer = req.body?.answer?.toString()?.trim();
-      const nextReviewDate = req.body?.nextReviewDate?.toString();
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "question")) {
-        if (!question) {
-          this.sendToastResponse(res, {
-            status: 400,
-            message: "A pergunta não pode ficar vazia.",
-            variant: "danger",
-          });
-          return;
-        }
-        updates.push({ key: "question", value: question });
+      if (payload.question !== undefined) {
+        updates.push({ key: "question", value: payload.question });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "answer")) {
-        if (!answer) {
-          this.sendToastResponse(res, {
-            status: 400,
-            message: "A resposta não pode ficar vazia.",
-            variant: "danger",
-          });
-          return;
-        }
-        updates.push({ key: "answer", value: answer });
+      if (payload.answer !== undefined) {
+        updates.push({ key: "answer", value: payload.answer });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "difficulty")) {
-        updates.push({ key: "difficulty", value: this.normalizeDifficulty(req.body?.difficulty) });
+      if (payload.difficulty !== undefined) {
+        updates.push({ key: "difficulty", value: payload.difficulty });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "tags")) {
-        updates.push({ key: "tags", value: this.parseTags(req.body?.tags) });
+      if (payload.tags !== undefined) {
+        updates.push({ key: "tags", value: payload.tags });
       }
 
-      if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "nextReviewDate")) {
-        const parsedDate = nextReviewDate ? new Date(nextReviewDate) : new Date();
+      if (payload.nextReviewDate !== undefined) {
+        const parsedDate = payload.nextReviewDate ?? new Date();
         updates.push({ key: "next_review_date", value: parsedDate.toISOString() });
       }
 
@@ -327,7 +373,7 @@ export class DecksController extends BaseController {
         return;
       }
 
-      await flashcardModel.update({ id: cardId, fields: updates });
+      await flashcardModel.update({ id: params.cardId, fields: updates });
 
       this.sendToastResponse(res, {
         status: 200,
@@ -345,13 +391,16 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId, cardId } = req.params;
+    const params = this.validate(this.getCardParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
 
     try {
       const card = await flashcardModel.findOne({
         params: [
-          { key: "id", value: cardId },
-          { key: "deck_id", value: deckId },
+          { key: "id", value: params.cardId },
+          { key: "deck_id", value: params.deckId },
           { key: "user_id", value: user.id },
         ],
       });
@@ -365,7 +414,7 @@ export class DecksController extends BaseController {
         return;
       }
 
-      await flashcardModel.updateNextReviewDateToNow(cardId);
+      await flashcardModel.updateNextReviewDateToNow(params.cardId);
 
       res
         .status(200)
@@ -388,13 +437,16 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId, cardId } = req.params;
+    const params = this.validate(this.getCardParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
 
     try {
       const card = await flashcardModel.findOne({
         params: [
-          { key: "id", value: cardId },
-          { key: "deck_id", value: deckId },
+          { key: "id", value: params.cardId },
+          { key: "deck_id", value: params.deckId },
           { key: "user_id", value: user.id },
         ],
       });
@@ -410,8 +462,8 @@ export class DecksController extends BaseController {
 
       await flashcardModel.delete({
         params: [
-          { key: "id", value: cardId },
-          { key: "deck_id", value: deckId },
+          { key: "id", value: params.cardId },
+          { key: "deck_id", value: params.deckId },
           { key: "user_id", value: user.id },
         ],
       });
@@ -432,21 +484,18 @@ export class DecksController extends BaseController {
       return;
     }
 
-    const { deckId } = req.params;
-    const content = req.body?.content?.toString()?.trim();
-    const goal = req.body?.goal?.toString()?.trim();
-    const tone = this.normalizeTone(req.body?.tone);
+    const params = this.validate(this.getDeckParamsSchema(), req.params, res);
+    if (!params) {
+      return;
+    }
 
-    if (!content) {
-      res
-        .status(400)
-        .setHeader("Content-Type", "text/html; charset=utf-8")
-        .send('<div class="alert alert-danger" role="alert">Cole algum conteúdo para que possamos gerar sugestões.</div>');
+    const payload = this.validate(this.getCardGenerationSchema(), req.body ?? {}, res);
+    if (!payload) {
       return;
     }
 
     try {
-      const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
+      const deck = await this.ensureDeckBelongsToUser(params.deckId, user.id);
       if (!deck) {
         res
           .status(404)
@@ -458,9 +507,9 @@ export class DecksController extends BaseController {
       const cards = await this.generateCardsWithFallback({
         deckName: deck.name,
         deckSubject: deck.subject ?? "Geral",
-        content,
-        goal,
-        tone,
+        content: payload.content,
+        goal: payload.goal,
+        tone: payload.tone,
       });
 
       for (const suggestion of cards) {
@@ -470,7 +519,7 @@ export class DecksController extends BaseController {
             { key: "question", value: suggestion.question },
             { key: "answer", value: suggestion.answer },
             { key: "user_id", value: user.id },
-            { key: "deck_id", value: deckId },
+            { key: "deck_id", value: params.deckId },
             { key: "status", value: "new" },
             { key: "review_count", value: 0 },
             { key: "last_review_date", value: null },

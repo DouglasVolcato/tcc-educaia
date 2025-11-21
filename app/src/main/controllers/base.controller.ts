@@ -1,4 +1,5 @@
 import { Application, Request, Response, Router } from "express";
+import { ZodSchema, z } from "zod";
 import { TokenHandlerAdapter } from "../../adapters/token-handler-adapter.ts";
 import { SESSION_COOKIE_NAME } from "../../constants/session.ts";
 import { authMiddleware } from "../../controllers/middlewares/authMiddleware.ts";
@@ -159,6 +160,52 @@ export abstract class BaseController {
       return value as "easy" | "medium" | "hard";
     }
     return "medium";
+  }
+
+  protected buildCheckboxSchema() {
+    return z.preprocess((value) => this.parseCheckbox(value), z.boolean());
+  }
+
+  protected buildTagsSchema(options: { defaultEmpty?: boolean } = {}) {
+    const { defaultEmpty = true } = options;
+    return z
+      .union([z.array(z.string()), z.string()])
+      .optional()
+      .transform((value) => {
+        if (value === undefined) {
+          return defaultEmpty ? [] : undefined;
+        }
+        return this.parseTags(value);
+      });
+  }
+
+  protected buildDifficultySchema(options: { defaultToMedium?: boolean } = {}) {
+    const { defaultToMedium = true } = options;
+    return z
+      .enum(["easy", "medium", "hard"])
+      .optional()
+      .transform((value) => {
+        if (value) {
+          return this.normalizeDifficulty(value);
+        }
+        return defaultToMedium ? "medium" : undefined;
+      });
+  }
+
+  protected validate<T>(schema: ZodSchema<T>, payload: unknown, res: Response): T | null {
+    const result = schema.safeParse(payload);
+    if (!result.success) {
+      const fallbackMessage = "Dados inválidos. Verifique as informações enviadas.";
+      const message = result.error.issues[0]?.message ?? fallbackMessage;
+      this.sendToastResponse(res, {
+        status: 400,
+        message,
+        variant: "danger",
+      });
+      return null;
+    }
+
+    return result.data;
   }
 
   protected handleUnexpectedError(context: string, error: unknown, res: Response) {
