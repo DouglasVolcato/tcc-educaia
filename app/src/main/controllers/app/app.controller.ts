@@ -43,7 +43,6 @@ export type ReviewSession = {
     tags: string[];
     dueIn: string;
   };
-  streakInDays: number;
 };
 
 export type UpcomingReview = {
@@ -285,7 +284,6 @@ export class AppController extends BaseController {
             deckName: nextCard.deck_name,
             cardNumber: Number(nextCard.position ?? 1),
             totalCards: totalDue,
-            streakInDays: user.streakInDays,
             card: {
               id: nextCard.id,
               question: nextCard.question,
@@ -298,7 +296,6 @@ export class AppController extends BaseController {
             deckName: "Você está em dia!",
             cardNumber: 0,
             totalCards: 0,
-            streakInDays: user.streakInDays,
             card: {
               id: "",
               question: "Nenhuma carta pendente no momento.",
@@ -449,7 +446,6 @@ export class AppController extends BaseController {
       plan: user.plan ?? "Gratuito",
       timezone: user.timezone ?? "America/Sao_Paulo",
       avatar: user.avatar_url ?? fallbackAvatar,
-      streakInDays: user.streak_in_days ?? 0,
       goalPerDay: user.goal_per_day ?? 0,
     };
   }
@@ -526,7 +522,7 @@ export class AppController extends BaseController {
 
   private buildProgressSummary(params: {
     history: { reviewed: number; created: number }[];
-    user: { goalPerDay: number; streakInDays: number };
+    user: { goalPerDay: number; };
     accuracy: number;
     dueToday: number;
     indicators: ProgressIndicator[];

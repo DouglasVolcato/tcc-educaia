@@ -34,6 +34,14 @@ export class FlashcardModel extends Repository {
             ],
         });
     }
+    async updateNextReviewDateToNow(cardId) {
+        const query = `
+      UPDATE flashcards
+      SET next_review_date = NOW()
+      WHERE id = $1;
+    `;
+        await this.executeSql({ query, params: [cardId] });
+    }
     async findByDeck(input) {
         const filters = ["deck_id = $1", "user_id = $2"];
         const values = [input.deckId, input.userId];
@@ -109,6 +117,16 @@ export class FlashcardModel extends Repository {
     `;
         const result = await this.executeSql({ query, params: [input.userId, input.since] });
         return result.length > 0 ? Number(result[0].reviewed) : 0;
+    }
+    async getLastReviewDate(input) {
+        const query = `
+      SELECT MAX(last_review_date) AS last_review_date
+      FROM flashcards
+      WHERE user_id = $1;
+    `;
+        const result = await this.executeSql({ query, params: [input.userId] });
+        const lastReview = result.length > 0 ? result[0].last_review_date : null;
+        return lastReview ? new Date(lastReview) : null;
     }
     async getReviewHistory(input) {
         const query = `

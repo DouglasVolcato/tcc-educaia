@@ -20,17 +20,20 @@ export class AppController extends BaseController {
         };
         this.renderDecks = async (req, res) => {
             try {
+                const filter = (req.query.filter?.toString() ?? "all");
                 const data = await this.runInTransaction(async () => {
                     const { row: userRow, view: user } = await this.loadCurrentUser(req);
                     const deckStats = await deckModel.findDecksWithStats({ userId: userRow.id });
                     const decks = deckStats.map((deck) => this.mapDeckStatsToView(deck));
-                    const dueToday = decks.reduce((total, deck) => total + deck.dueCards, 0);
-                    const totalCards = decks.reduce((total, deck) => total + deck.totalCards, 0);
+                    const filteredDecks = this.filterDecks(decks, filter);
+                    const dueToday = filteredDecks.reduce((total, deck) => total + deck.dueCards, 0);
+                    const totalCards = filteredDecks.reduce((total, deck) => total + deck.totalCards, 0);
                     return {
                         user,
-                        decks,
+                        decks: filteredDecks,
+                        activeFilter: filter,
                         summary: {
-                            totalDecks: decks.length,
+                            totalDecks: filteredDecks.length,
                             dueToday,
                             totalCards,
                         },
@@ -171,7 +174,6 @@ export class AppController extends BaseController {
                             deckName: nextCard.deck_name,
                             cardNumber: Number(nextCard.position ?? 1),
                             totalCards: totalDue,
-                            streakInDays: user.streakInDays,
                             card: {
                                 id: nextCard.id,
                                 question: nextCard.question,
@@ -184,7 +186,6 @@ export class AppController extends BaseController {
                             deckName: "Você está em dia!",
                             cardNumber: 0,
                             totalCards: 0,
-                            streakInDays: user.streakInDays,
                             card: {
                                 id: "",
                                 question: "Nenhuma carta pendente no momento.",
@@ -211,6 +212,7 @@ export class AppController extends BaseController {
         };
         this.renderProgress = async (req, res) => {
             try {
+                const summaryRange = (req.query.range?.toString() ?? "summary");
                 const data = await this.runInTransaction(async () => {
                     const { row: userRow, view: user } = await this.loadCurrentUser(req);
                     const deckStats = await deckModel.findDecksWithStats({ userId: userRow.id });
@@ -218,6 +220,12 @@ export class AppController extends BaseController {
                     const historyRows = await flashcardModel.getReviewHistory({ userId: userRow.id, days: 6 });
                     const history = this.formatHistory(historyRows);
                     const focus = this.formatFocus(decks);
+                    const summaryHistoryDays = summaryRange === "monthly" ? 29 : 6;
+                    const summaryHistoryRows = await flashcardModel.getReviewHistory({
+                        userId: userRow.id,
+                        days: summaryHistoryDays,
+                    });
+                    const summaryHistory = this.formatHistory(summaryHistoryRows);
                     const { total, mastered } = await flashcardModel.countByStatus({ userId: userRow.id });
                     const accuracy = total === 0 ? 0 : Math.round((mastered / total) * 100);
                     const reviewedLast30 = await flashcardModel.countReviewedSince({
@@ -233,14 +241,6 @@ export class AppController extends BaseController {
                             helperText: "baseado em cartas dominadas",
                             trend: accuracy >= 70 ? "up" : "steady",
                             trendValue: accuracy >= 70 ? "+7%" : "estável",
-                        },
-                        {
-                            id: "streak",
-                            title: "Dias consecutivos",
-                            value: `${user.streakInDays}`,
-                            helperText: "sequência ativa",
-                            trend: user.streakInDays > 0 ? "up" : "steady",
-                            trendValue: user.streakInDays > 0 ? "+1" : "estável",
                         },
                         {
                             id: "studied",
@@ -260,13 +260,13 @@ export class AppController extends BaseController {
                         },
                     ];
                     const summary = this.buildProgressSummary({
-                        history,
+                        history: summaryHistory,
                         user,
                         accuracy,
                         dueToday,
                         indicators,
                     });
-                    return { user, indicators, history, focus, summary };
+                    return { user, indicators, history, focus, summary, summaryRange };
                 });
                 res.render("app/progress", {
                     title: "Indicadores",
@@ -335,9 +335,17 @@ export class AppController extends BaseController {
             plan: user.plan ?? "Gratuito",
             timezone: user.timezone ?? "America/Sao_Paulo",
             avatar: user.avatar_url ?? fallbackAvatar,
-            streakInDays: user.streak_in_days ?? 0,
             goalPerDay: user.goal_per_day ?? 0,
         };
+    }
+    filterDecks(decks, filter) {
+        if (filter === "due") {
+            return decks.filter((deck) => deck.dueCards > 0);
+        }
+        if (filter === "recent") {
+            return [...decks].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        }
+        return decks;
     }
     mapDeckStatsToView(deck) {
         return {
@@ -354,11 +362,14 @@ export class AppController extends BaseController {
         };
     }
     mapFlashcardToView(card) {
+        const nextReviewDate = card.next_review_date ? new Date(card.next_review_date).toISOString() : null;
         return {
             id: card.id,
             question: card.question,
             answer: card.answer,
             lastReviewedAt: new Date(card.last_review_date ?? card.created_at).toISOString(),
+            nextReviewDate,
+            isDue: !nextReviewDate || new Date(nextReviewDate).getTime() <= Date.now(),
             difficulty: (card.difficulty ?? "medium"),
             tags: Array.isArray(card.tags) ? card.tags : [],
         };
@@ -420,13 +431,6 @@ export class AppController extends BaseController {
                 trend: getIndicator("due")?.trend ?? "steady",
                 trendValue: getIndicator("due")?.trendValue ?? "estável",
                 goal: user.goalPerDay > 0 ? `${user.goalPerDay} por dia` : "Defina sua meta diária",
-            },
-            {
-                metric: "Dias consecutivos",
-                value: `${user.streakInDays}`,
-                trend: getIndicator("streak")?.trend ?? "steady",
-                trendValue: getIndicator("streak")?.trendValue ?? "estável",
-                goal: "Mantenha a sequência",
             },
         ];
     }

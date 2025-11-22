@@ -76,21 +76,6 @@ export class ReviewController extends BaseController {
         ],
       });
 
-      if (isFirstReviewToday) {
-        const currentStreak = user.streak_in_days ?? 0;
-        const yesterday = new Date(startOfToday);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const isConsecutiveDay =
-          !!lastReviewDate && lastReviewDate >= yesterday && lastReviewDate < startOfToday;
-
-        await userModel.update({
-          id: user.id,
-          fields: [{ key: "streak_in_days", value: isConsecutiveDay ? currentStreak + 1 : 1 }],
-        });
-      }
-
-      // Force the review page to refresh so the next card is displayed immediately
       res.setHeader("HX-Refresh", "true");
 
       this.sendToastResponse(res, {

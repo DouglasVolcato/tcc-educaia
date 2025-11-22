@@ -117,6 +117,12 @@ export class DecksController extends BaseController {
                     });
                     return;
                 }
+                await flashcardModel.delete({
+                    params: [
+                        { key: "deck_id", value: deckId },
+                        { key: "user_id", value: user.id },
+                    ],
+                });
                 await deckModel.delete({
                     params: [
                         { key: "id", value: deckId },
@@ -171,7 +177,6 @@ export class DecksController extends BaseController {
                         { key: "status", value: "new" },
                         { key: "review_count", value: 0 },
                         { key: "last_review_date", value: null },
-                        { key: "next_review_date", value: new Date().toISOString() },
                         { key: "difficulty", value: difficulty },
                         { key: "tags", value: tags },
                     ],
@@ -211,6 +216,7 @@ export class DecksController extends BaseController {
                 const updates = [];
                 const question = req.body?.question?.toString()?.trim();
                 const answer = req.body?.answer?.toString()?.trim();
+                const nextReviewDate = req.body?.nextReviewDate?.toString();
                 if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "question")) {
                     if (!question) {
                         this.sendToastResponse(res, {
@@ -239,6 +245,10 @@ export class DecksController extends BaseController {
                 if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "tags")) {
                     updates.push({ key: "tags", value: this.parseTags(req.body?.tags) });
                 }
+                if (Object.prototype.hasOwnProperty.call(req.body ?? {}, "nextReviewDate")) {
+                    const parsedDate = nextReviewDate ? new Date(nextReviewDate) : new Date();
+                    updates.push({ key: "next_review_date", value: parsedDate.toISOString() });
+                }
                 if (updates.length === 0) {
                     this.sendToastResponse(res, {
                         status: 200,
@@ -256,6 +266,44 @@ export class DecksController extends BaseController {
             }
             catch (error) {
                 this.handleUnexpectedError("Failed to update card", error, res);
+            }
+        };
+        this.handleMoveCardToReview = async (req, res) => {
+            const user = this.ensureAuthenticatedUser(req, res);
+            if (!user) {
+                return;
+            }
+            const { deckId, cardId } = req.params;
+            try {
+                const card = await flashcardModel.findOne({
+                    params: [
+                        { key: "id", value: cardId },
+                        { key: "deck_id", value: deckId },
+                        { key: "user_id", value: user.id },
+                    ],
+                });
+                if (!card) {
+                    this.sendToastResponse(res, {
+                        status: 404,
+                        message: "Carta não encontrada.",
+                        variant: "danger",
+                    });
+                    return;
+                }
+                await flashcardModel.updateNextReviewDateToNow(cardId);
+                res
+                    .status(200)
+                    .setHeader("Content-Type", "text/html; charset=utf-8")
+                    .send(`
+          <span class="badge text-bg-warning d-inline-flex align-items-center gap-1">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Revisão pendente
+          </span>
+        `);
+                return;
+            }
+            catch (error) {
+                this.handleUnexpectedError("Erro ao mover carta para revisão", error, res);
             }
         };
         this.handleDeleteCard = async (req, res) => {
@@ -313,6 +361,13 @@ export class DecksController extends BaseController {
                     .send('<div class="alert alert-danger" role="alert">Cole algum conteúdo para que possamos gerar sugestões.</div>');
                 return;
             }
+            if (content.length > 10000) {
+                res
+                    .status(400)
+                    .setHeader("Content-Type", "text/html; charset=utf-8")
+                    .send('<div class="alert alert-danger" role="alert">Use no máximo 10000 caracteres para gerar sugestões.</div>');
+                return;
+            }
             try {
                 const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
                 if (!deck) {
@@ -340,7 +395,6 @@ export class DecksController extends BaseController {
                             { key: "status", value: "new" },
                             { key: "review_count", value: 0 },
                             { key: "last_review_date", value: null },
-                            { key: "next_review_date", value: new Date().toISOString() },
                             { key: "difficulty", value: suggestion.difficulty ?? "medium" },
                             { key: "tags", value: suggestion.tags ?? [] },
                         ],
@@ -368,6 +422,7 @@ export class DecksController extends BaseController {
         this.router.post("/decks/:deckId/cards", this.handleCreateCard);
         this.router.put("/decks/:deckId/cards/:cardId", this.handleUpdateCard);
         this.router.delete("/decks/:deckId/cards/:cardId", this.handleDeleteCard);
+        this.router.post("/decks/:deckId/cards/:cardId/move-to-review", this.handleMoveCardToReview);
         this.router.post("/decks/:deckId/generate", this.handleGenerateCards);
     }
     buildDeckParams(req) {
