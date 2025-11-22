@@ -365,14 +365,6 @@ export class AppController extends BaseController {
             trendValue: accuracy >= 70 ? "+7%" : "estável",
           },
           {
-            id: "streak",
-            title: "Dias consecutivos",
-            value: `${user.streakInDays}`,
-            helperText: "sequência ativa",
-            trend: user.streakInDays > 0 ? "up" : "steady",
-            trendValue: user.streakInDays > 0 ? "+1" : "estável",
-          },
-          {
             id: "studied",
             title: "Cartas estudadas",
             value: `${reviewedLast30}`,
@@ -576,13 +568,6 @@ export class AppController extends BaseController {
         trend: getIndicator("due")?.trend ?? "steady",
         trendValue: getIndicator("due")?.trendValue ?? "estável",
         goal: user.goalPerDay > 0 ? `${user.goalPerDay} por dia` : "Defina sua meta diária",
-      },
-      {
-        metric: "Dias consecutivos",
-        value: `${user.streakInDays}`,
-        trend: getIndicator("streak")?.trend ?? "steady",
-        trendValue: getIndicator("streak")?.trendValue ?? "estável",
-        goal: "Mantenha a sequência",
       },
     ];
   }

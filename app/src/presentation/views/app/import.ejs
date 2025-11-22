@@ -35,8 +35,13 @@
                         id="contentSource"
                         name="content"
                         placeholder="Cole aqui seu texto, resumo ou anotações"
+                        maxlength="10000"
                         required
                       ></textarea>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-secondary">Máximo de 10000 caracteres para geração.</small>
+                        <small class="text-secondary"><span id="contentCounter" aria-live="polite">0</span>/10000</small>
+                      </div>
                     </div>
                     <div class="row g-3">
                       <div class="col-md-6">
@@ -95,4 +100,18 @@
       <%- include('../partials/footer') %>
     </div>
     <%- include('../partials/feedback') %>
+    <script>
+      (() => {
+        const textarea = document.getElementById('contentSource');
+        const counter = document.getElementById('contentCounter');
+        if (!textarea || !counter) return;
+
+        const updateCount = () => {
+          counter.textContent = textarea.value.length.toString();
+        };
+
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+      })();
+    </script>
   <%- include('../partials/scripts') %>

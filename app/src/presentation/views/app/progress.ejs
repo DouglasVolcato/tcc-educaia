@@ -13,7 +13,7 @@
 
           <section class="row g-4">
             <% indicators.forEach(function(indicator) { %>
-              <div class="col-12 col-md-6 col-xl-3">
+              <div class="col-12 col-md-6 col-xl-4">
                 <div class="card border-0 shadow-sm h-100">
                   <div class="card-body p-4 d-flex flex-column gap-2">
                     <span class="small text-uppercase text-secondary fw-semibold"><%= indicator.title %></span>
@@ -133,7 +133,6 @@
                       <th scope="col">Métrica</th>
                       <th scope="col">Última semana</th>
                       <th scope="col">Variação</th>
-                      <th scope="col">Meta</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -147,7 +146,6 @@
                             <%= item.trendValue %>
                           </span>
                         </td>
-                        <td><%= item.goal %></td>
                       </tr>
                     <% }) %>
                   </tbody>

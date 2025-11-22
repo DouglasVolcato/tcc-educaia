@@ -444,6 +444,13 @@ export class DecksController extends BaseController {
         .send('<div class="alert alert-danger" role="alert">Cole algum conteúdo para que possamos gerar sugestões.</div>');
       return;
     }
+    if (content.length > 10000) {
+      res
+        .status(400)
+        .setHeader("Content-Type", "text/html; charset=utf-8")
+        .send('<div class="alert alert-danger" role="alert">Use no máximo 10000 caracteres para gerar sugestões.</div>');
+      return;
+    }
 
     try {
       const deck = await this.ensureDeckBelongsToUser(deckId, user.id);

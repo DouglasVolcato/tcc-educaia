@@ -22,9 +22,14 @@
               Date(card.lastReviewedAt).toLocaleDateString('pt-BR') %>
           </p>
         </div>
+        <div class="text-secondary small text-lg-end">
+          <p class="mb-1"><i class="bi bi-clock-history me-1"></i> Próxima revisão em <%= new
+              Date(card.nextReviewDate).toLocaleDateString('pt-BR') %>
+          </p>
+        </div>
       </div>
       <div class="border rounded-4 bg-body-tertiary p-3">
-        <button class="btn btn-outline-primary btn-sm mb-2" type="button" data-action="toggle-answer"
+        <button class="btn btn-primary btn-sm mb-2" type="button" data-action="toggle-answer"
           data-target="#card-answer-<%= deck.id %>-<%= card.id %>"
           aria-controls="card-answer-<%= deck.id %>-<%= card.id %>" aria-expanded="false">
           <span data-visible-label>

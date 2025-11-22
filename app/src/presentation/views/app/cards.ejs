@@ -25,9 +25,9 @@
                       <a class="btn btn-primary" href="/app/review">
                         <i class="bi bi-lightning-charge-fill me-2"></i> Começar revisão
                       </a>
-                      <a class="btn btn-outline-primary" href="/app/decks/<%= deck.id %>/import">
-                        <i class="bi bi-magic me-2"></i> Criar com IA
-                      </a>
+                      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createCardModal">
+                        <i class="bi bi-magic me-2"></i> Nova carta
+                      </button>
                       <button class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#deckSettings" aria-controls="deckSettings">
                         <i class="bi bi-sliders me-2"></i> Configurações
                       </button>
@@ -70,24 +70,10 @@
                           <p class="text-secondary small mb-0">Cole conteúdos, resumos ou artigos para transformar em flashcards automaticamente.</p>
                         </div>
                       </li>
-                      <li class="d-flex align-items-start gap-3">
-                        <i class="bi bi-pencil-square text-primary fs-4"></i>
-                        <div>
-                          <p class="fw-semibold mb-1">Importar CSV</p>
-                          <p class="text-secondary small mb-0">Tenha total controle importando cartas existentes de outras ferramentas.</p>
-                        </div>
-                      </li>
-                      <li class="d-flex align-items-start gap-3">
-                        <i class="bi bi-clock-history text-primary fs-4"></i>
-                        <div>
-                          <p class="fw-semibold mb-1">Histórico de revisão</p>
-                          <p class="text-secondary small mb-0">Visualize quando cada carta foi estudada pela última vez.</p>
-                        </div>
-                      </li>
                     </ul>
-                    <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#createCardModal">
-                      <i class="bi bi-plus-lg me-2"></i> Nova carta manual
-                    </button>
+                    <a class="btn btn-primary w-100" href="/app/decks/<%= deck.id %>/import">
+                      <i class="bi bi-plus-lg me-2"></i> Gerar cartas com IA
+                    </a>
                   </div>
                 </div>
               </div>
@@ -140,10 +126,13 @@
                       <div class="text-secondary small text-lg-end">
                         <p class="mb-1"><i class="bi bi-clock-history me-1"></i> Revisado em <%= new Date(card.lastReviewedAt).toLocaleDateString('pt-BR') %></p>
                       </div>
+                      <div class="text-secondary small text-lg-end">
+                        <p class="mb-1"><i class="bi bi-clock-history me-1"></i> Próxima revisão em <%= new Date(card.nextReviewDate).toLocaleDateString('pt-BR') %></p>
+                      </div>
                     </div>
                     <div class="border rounded-4 bg-body-tertiary p-3">
                       <button
-                        class="btn btn-outline-primary btn-sm mb-2"
+                        class="btn btn-primary btn-sm mb-2"
                         type="button"
                         data-action="toggle-answer"
                         data-target="#card-answer-<%= deck.id %>-<%= card.id %>"
@@ -389,6 +378,9 @@
           const answer = trigger?.getAttribute('data-card-answer') ?? '';
 
           editForm?.setAttribute('hx-put', `/api/decks/<%= deck.id %>/cards/${cardId}`);
+          if (editForm) {
+            htmx.process(editForm);
+          }
           if (editForm) {
             editForm.dataset.cardId = cardId;
           }

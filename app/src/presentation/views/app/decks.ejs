@@ -43,12 +43,6 @@
                       <p class="display-6 fw-bold mb-0"><%= summary.totalCards %></p>
                     </div>
                   </div>
-                  <div class="col-12">
-                    <div class="bg-white bg-opacity-10 rounded-4 p-3">
-                      <span class="small text-uppercase opacity-75">Meta diária</span>
-                      <p class="mb-0">Revisar ao menos <strong><%= user.goalPerDay %> cartas</strong> por dia para manter o ritmo.</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -129,9 +123,6 @@
                       <div class="d-flex flex-wrap gap-2">
                         <a class="btn btn-primary flex-grow-1" href="/app/decks/<%= deck.id %>/cards">
                           <i class="bi bi-collection me-2"></i> Abrir baralho
-                        </a>
-                        <a class="btn btn-outline-primary" href="/app/decks/<%= deck.id %>/import">
-                          <i class="bi bi-magic me-2"></i> Adicionar com IA
                         </a>
                         <button
                           class="btn btn-outline-danger"
