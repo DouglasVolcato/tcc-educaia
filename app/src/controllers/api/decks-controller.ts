@@ -1,14 +1,14 @@
-import { Application, Request, Response } from "express";
-import { z } from "zod";
-import { DeckCardGeneratorService } from "../../ai/deck-card-generator.service.ts";
-import { UuidGeneratorAdapter } from "../../adapters/uuid-generator-adapter.ts";
-import { deckModel } from "../../db/models/deck.model.ts";
-import { flashcardModel, FlashcardRow } from "../../db/models/flashcard.model.ts";
 import { cardGenerationProcessModel } from "../../db/models/card-generation-process.model.ts";
-import { InputField } from "../../db/repository.ts";
-import { BaseController } from "../base-controller.ts";
-import { deckGenerateRateLimiter } from "../rate-limiters.ts";
+import { DeckCardGeneratorService } from "../../ai/deck-card-generator-service.ts";
+import { flashcardModel, FlashcardRow } from "../../db/models/flashcard.model.ts";
+import { UuidGeneratorAdapter } from "../../adapters/uuid-generator-adapter.ts";
 import { deckGenerationQueue } from "../../queue/deck-generation-queue.ts";
+import { deckGenerateRateLimiter } from "../rate-limiters.ts";
+import { deckModel } from "../../db/models/deck.model.ts";
+import { Application, Request, Response } from "express";
+import { BaseController } from "../base-controller.ts";
+import { InputField } from "../../db/repository.ts";
+import { z } from "zod";
 
 export class DecksController extends BaseController {
   private readonly cardGenerator: DeckCardGeneratorService;

@@ -1,8 +1,8 @@
-import amqplib, { Channel, ChannelModel, ConsumeMessage } from "amqplib";
-import { DeckCardGeneratorService } from "../ai/deck-card-generator.service.ts";
-import { UuidGeneratorAdapter } from "../adapters/uuid-generator-adapter.ts";
-import { flashcardModel } from "../db/models/flashcard.model.ts";
 import { cardGenerationProcessModel } from "../db/models/card-generation-process.model.ts";
+import { DeckCardGeneratorService } from "../ai/deck-card-generator-service.ts";
+import { UuidGeneratorAdapter } from "../adapters/uuid-generator-adapter.ts";
+import amqplib, { Channel, ChannelModel, ConsumeMessage } from "amqplib";
+import { flashcardModel } from "../db/models/flashcard.model.ts";
 
 export type DeckGenerationTone = "concise" | "standard" | "deep";
 

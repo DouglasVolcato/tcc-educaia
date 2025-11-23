@@ -1,8 +1,8 @@
-import amqplib from "amqplib";
-import { DeckCardGeneratorService } from "../ai/deck-card-generator.service.js";
-import { UuidGeneratorAdapter } from "../adapters/uuid-generator-adapter.js";
-import { flashcardModel } from "../db/models/flashcard.model.js";
 import { cardGenerationProcessModel } from "../db/models/card-generation-process.model.js";
+import { DeckCardGeneratorService } from "../ai/deck-card-generator-service.js";
+import { UuidGeneratorAdapter } from "../adapters/uuid-generator-adapter.js";
+import amqplib from "amqplib";
+import { flashcardModel } from "../db/models/flashcard.model.js";
 class DeckGenerationQueue {
     constructor() {
         this.queueName = "deck-generation";

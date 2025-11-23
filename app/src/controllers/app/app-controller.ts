@@ -1,12 +1,11 @@
-import { Application, Request, Response } from "express";
-import { BaseController } from "../base-controller.ts";
-import { authMiddleware } from "../middlewares/auth-middleware.ts";
-import { DbConnection } from "../../db/db-connection.ts";
-import { deckModel } from "../../db/models/deck.model.ts";
-import { flashcardModel } from "../../db/models/flashcard.model.ts";
-import { integrationModel } from "../../db/models/integration.model.ts";
 import { cardGenerationProcessModel } from "../../db/models/card-generation-process.model.ts";
-import { userModel, UserRow } from "../../db/models/user.model.ts";
+import { flashcardModel } from "../../db/models/flashcard.model.ts";
+import { authMiddleware } from "../middlewares/auth-middleware.ts";
+import { deckModel } from "../../db/models/deck.model.ts";
+import { DbConnection } from "../../db/db-connection.ts";
+import { Application, Request, Response } from "express";
+import { UserRow } from "../../db/models/user.model.ts";
+import { BaseController } from "../base-controller.ts";
 
 export type FlashcardView = {
   id: string;

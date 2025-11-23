@@ -1,9 +1,9 @@
-import { BaseController } from "../base-controller.js";
-import { authMiddleware } from "../middlewares/auth-middleware.js";
-import { DbConnection } from "../../db/db-connection.js";
-import { deckModel } from "../../db/models/deck.model.js";
-import { flashcardModel } from "../../db/models/flashcard.model.js";
 import { cardGenerationProcessModel } from "../../db/models/card-generation-process.model.js";
+import { flashcardModel } from "../../db/models/flashcard.model.js";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
+import { deckModel } from "../../db/models/deck.model.js";
+import { DbConnection } from "../../db/db-connection.js";
+import { BaseController } from "../base-controller.js";
 export class AppController extends BaseController {
     constructor(app) {
         super(app, { basePath: "/app", requiresAuth: false });
