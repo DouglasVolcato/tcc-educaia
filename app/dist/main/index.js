@@ -1,5 +1,6 @@
 import { IntegrationController } from "../controllers/api/integration-controller.js";
 import { AccountController } from "../controllers/api/account-controller.js";
+import { httpRequestsTotal, metricsRegistry } from "../metrics/metrics.js";
 import { ReviewController } from "../controllers/api/review-controller.js";
 import { DecksController } from "../controllers/api/decks-controller.js";
 import { deckGenerationQueue } from "../queue/deck-generation-queue.js";
@@ -48,13 +49,32 @@ app.use("/static", express.static(path.join(rootDir, "src", "presentation", "pub
 }));
 app.disable("x-powered-by");
 app.get("/", (_, res) => {
+    httpRequestsTotal.inc({
+        method: "GET",
+        route: "/",
+        status_code: String(res.statusCode),
+    });
     res.render("landing/index");
 });
 app.get("/privacy", (_, res) => {
+    httpRequestsTotal.inc({
+        method: "GET",
+        route: "/privacy",
+        status_code: String(res.statusCode),
+    });
     res.render("landing/privacy");
 });
 app.get("/terms", (_, res) => {
+    httpRequestsTotal.inc({
+        method: "GET",
+        route: "/terms",
+        status_code: String(res.statusCode),
+    });
     res.render("landing/terms");
+});
+app.get("/metrics", async (_, res) => {
+    res.setHeader("Content-Type", metricsRegistry.contentType);
+    res.send(await metricsRegistry.metrics());
 });
 new AuthController(app).setUp();
 new DecksController(app).setUp();

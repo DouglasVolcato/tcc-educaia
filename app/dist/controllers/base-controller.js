@@ -2,11 +2,26 @@ import { Router } from "express";
 import { TokenHandlerAdapter } from "../adapters/token-handler-adapter.js";
 import { authMiddleware } from "./middlewares/auth-middleware.js";
 import { SESSION_COOKIE_NAME } from "../constants/session.js";
+import { httpRequestsTotal } from "../metrics/metrics.js";
 import { defaultRateLimiter } from "./rate-limiters.js";
 export class BaseController {
     constructor(app, options = {}) {
         this.app = app;
         this.options = options;
+        this.trackRequestMetrics = (req, res, next) => {
+            res.on("finish", () => {
+                const routePath = req.route?.path;
+                const base = req.baseUrl || "";
+                const path = routePath ? `${base}${routePath}` : `${base}${req.path}`;
+                const normalizedRoute = path && path.trim().length > 0 ? path : "unknown_route";
+                httpRequestsTotal.inc({
+                    method: req.method,
+                    route: normalizedRoute,
+                    status_code: String(res.statusCode),
+                });
+            });
+            next();
+        };
         this.router = Router();
     }
     setUp() {
@@ -26,6 +41,7 @@ export class BaseController {
         });
     }
     setupMiddlewares() {
+        this.router.use(this.trackRequestMetrics);
         const rateLimiter = this.options.rateLimiter ?? defaultRateLimiter;
         this.router.use(rateLimiter);
         if (this.options.requiresAuth ?? true) {

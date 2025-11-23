@@ -1,5 +1,6 @@
 import { IntegrationController } from "../controllers/api/integration-controller.ts";
 import { AccountController } from "../controllers/api/account-controller.ts";
+import { httpRequestsTotal, metricsRegistry } from "../metrics/metrics.ts";
 import { ReviewController } from "../controllers/api/review-controller.ts";
 import { DecksController } from "../controllers/api/decks-controller.ts";
 import { deckGenerationQueue } from "../queue/deck-generation-queue.ts";
@@ -64,13 +65,35 @@ app.use(
 app.disable("x-powered-by");
 
 app.get("/", (_, res) => {
+  httpRequestsTotal.inc({
+    method: "GET",
+    route: "/",
+    status_code: String(res.statusCode),
+  });
   res.render("landing/index");
 });
+
 app.get("/privacy", (_, res) => {
+  httpRequestsTotal.inc({
+    method: "GET",
+    route: "/privacy",
+    status_code: String(res.statusCode),
+  });
   res.render("landing/privacy");
 });
+
 app.get("/terms", (_, res) => {
+  httpRequestsTotal.inc({
+    method: "GET",
+    route: "/terms",
+    status_code: String(res.statusCode),
+  });
   res.render("landing/terms");
+});
+
+app.get("/metrics", async (_, res) => {
+  res.setHeader("Content-Type", metricsRegistry.contentType);
+  res.send(await metricsRegistry.metrics());
 });
 
 new AuthController(app).setUp();
