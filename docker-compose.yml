@@ -6,8 +6,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    networks:
-      - prometheus_monitoring_network
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
@@ -37,8 +35,6 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
     depends_on:
       - rabbitmq
-    networks:
-      - prometheus_monitoring_network
     volumes:
       - ./app:/app
       - /app/node_modules
@@ -67,28 +63,11 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
     depends_on:
       - rabbitmq
-    networks:
-      - prometheus_monitoring_network
     volumes:
       - ./app:/app
       - /app/node_modules
     deploy:
       replicas: 1
-
-  prometheus_monitor:
-    image: prom/prometheus:latest
-    container_name: prometheus_monitor
-    restart: always
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    networks:
-      - prometheus_monitoring_network
-
-networks:
-  prometheus_monitoring_network:
-    driver: bridge
 
 volumes:
   rabbitmq_data:
