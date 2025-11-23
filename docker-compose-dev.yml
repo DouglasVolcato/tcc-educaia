@@ -46,7 +46,7 @@ services:
       - ./app:/app
       - /app/node_modules
 
-  prometheus:
+  prometheus_monitor:
     image: prom/prometheus:latest
     container_name: prometheus
     restart: always
