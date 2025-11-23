@@ -8,6 +8,8 @@ export class BaseController {
         this.app = app;
         this.options = options;
         this.router = Router();
+    }
+    setUp() {
         this.setupMiddlewares();
         this.deferRouteRegistration();
         this.app.use(this.options.basePath ?? "/api", this.router);

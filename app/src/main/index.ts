@@ -67,12 +67,12 @@ app.get("/terms", (_, res) => {
   res.render("landing/terms");
 });
 
-new AuthController(app);
-new DecksController(app);
-new AccountController(app);
-new IntegrationController(app);
-new ReviewController(app);
-new AppController(app);
+new AuthController(app).setUp();
+new DecksController(app).setUp();
+new AccountController(app).setUp();
+new IntegrationController(app).setUp();
+new ReviewController(app).setUp();
+new AppController(app).setUp();
 
 const bootstrap = async () => {
   try {

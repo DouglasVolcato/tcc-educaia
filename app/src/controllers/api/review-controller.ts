@@ -1,7 +1,9 @@
 import { flashcardModel, FlashcardRow } from "../../db/models/flashcard.model.ts";
 import { Application, Request, Response } from "express";
 import { BaseController } from "../base-controller.ts";
+import { renderFile } from "ejs";
 import { z } from "zod";
+import path from "path";
 
 export class ReviewController extends BaseController {
   constructor(app: Application) {
@@ -83,15 +85,15 @@ export class ReviewController extends BaseController {
         ],
       });
 
-      res.setHeader("HX-Refresh", "true");
+      const view = await this.buildReviewView(user.id);
+      const html = await this.renderReviewBody(view);
 
-      this.sendToastResponse(res, {
-        status: 200,
-        message: "Progresso registrado! Continue avançando.",
-        variant: "success",
-      });
+      res
+        .status(200)
+        .setHeader("Content-Type", "text/html; charset=utf-8")
+        .send(html);
     } catch (error) {
-      this.handleUnexpectedError("Failed to grade card", error, res);
+      this.handleUnexpectedError("Erro ao avaliar carta", error, res);
     }
   };
 
@@ -135,4 +137,84 @@ export class ReviewController extends BaseController {
       variant: "info",
     });
   };
+
+  private async buildReviewView(userId: string) {
+    const dueCards = await flashcardModel.findDueCards({ userId, limit: 5 });
+    const [nextCard, ...upcomingCards] = dueCards;
+    const totalDue = await flashcardModel.countDueCards({ userId });
+
+    const session = nextCard
+      ? {
+        deckName: nextCard.deck_name,
+        cardNumber: Number(nextCard.position ?? 1),
+        totalCards: totalDue,
+        card: {
+          id: nextCard.id,
+          question: nextCard.question,
+          answer: nextCard.answer,
+          tags: nextCard.tags ?? [],
+          dueIn: this.formatDueIn(nextCard.next_review_date),
+        },
+      }
+      : {
+        deckName: "Você está em dia!",
+        cardNumber: 0,
+        totalCards: 0,
+        card: {
+          id: "",
+          question: "Nenhuma carta pendente no momento.",
+          answer: "Assim que novas cartas estiverem prontas, elas aparecerão aqui.",
+          tags: [],
+          dueIn: "agora",
+        },
+      };
+
+    const nextReviews = upcomingCards.map((card: any) => ({
+      id: card.id,
+      question: card.question,
+      dueIn: this.formatDueIn(card.next_review_date),
+    }));
+
+    return { session, nextReviews };
+  }
+
+  private async renderReviewBody(data: { session: any; nextReviews: any[] }) {
+    const viewPath = path.join(
+      process.cwd(),
+      "src",
+      "presentation",
+      "views",
+      "app",
+      "review-session.ejs",
+    );
+
+    return renderFile(viewPath, data, { async: true });
+  }
+
+  private formatDueIn(nextReviewDate: string | Date | null) {
+    if (!nextReviewDate) {
+      return "agora";
+    }
+
+    const now = new Date();
+    const date = new Date(nextReviewDate);
+    const diffMs = date.getTime() - now.getTime();
+    const diffMinutes = Math.max(Math.round(diffMs / (1000 * 60)), 0);
+
+    if (diffMinutes <= 0) {
+      return "agora";
+    }
+
+    if (diffMinutes < 60) {
+      return `em ${diffMinutes} min`;
+    }
+
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) {
+      return `em ${diffHours} h`;
+    }
+
+    const diffDays = Math.round(diffHours / 24);
+    return `em ${diffDays} dia${diffDays > 1 ? "s" : ""}`;
+  }
 }

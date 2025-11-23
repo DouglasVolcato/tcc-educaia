@@ -32,6 +32,9 @@ export abstract class BaseController {
     private readonly options: ControllerOptions = {},
   ) {
     this.router = Router();
+  }
+
+  public setUp() {
     this.setupMiddlewares();
     this.deferRouteRegistration();
     this.app.use(this.options.basePath ?? "/api", this.router);

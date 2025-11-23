@@ -1,12 +1,14 @@
 import rateLimit from "express-rate-limit";
 
 const DEFAULT_WINDOW_MS = 60 * 1000; // 1 minute
+const MESSAGE = "Você utilizou muito este recurso. Por favor, tente novamente mais tarde.";
 
 export const defaultRateLimiter = rateLimit({
   windowMs: DEFAULT_WINDOW_MS,
   max: 70,
   standardHeaders: true,
   legacyHeaders: false,
+  message: MESSAGE,
 });
 
 export const authRateLimiter = rateLimit({
@@ -14,6 +16,7 @@ export const authRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  message: MESSAGE,
 });
 
 export const deckGenerateRateLimiter = rateLimit({
@@ -21,4 +24,5 @@ export const deckGenerateRateLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  message: MESSAGE,
 });
