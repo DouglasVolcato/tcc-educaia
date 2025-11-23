@@ -3,6 +3,7 @@ import { DeckCardGeneratorService } from "../../ai/deck-card-generator.service.j
 import { UuidGeneratorAdapter } from "../../adapters/uuid-generator-adapter.js";
 import { deckModel } from "../../db/models/deck.model.js";
 import { flashcardModel } from "../../db/models/flashcard.model.js";
+import { cardGenerationProcessModel } from "../../db/models/card-generation-process.model.js";
 import { BaseController } from "../base-controller.js";
 import { deckGenerateRateLimiter } from "../rate-limiters.js";
 import { deckGenerationQueue } from "../../queue/deck-generation-queue.js";
@@ -388,6 +389,7 @@ export class DecksController extends BaseController {
                     .send(`<div class="alert alert-danger" role="alert">${message}</div>`);
                 return;
             }
+            let processId = null;
             try {
                 const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
                 if (!deck) {
@@ -400,7 +402,17 @@ export class DecksController extends BaseController {
                 const content = parsed.data.content;
                 const goal = parsed.data.goal?.length ? parsed.data.goal : undefined;
                 const tone = this.normalizeTone(parsed.data.tone);
-                const jobId = await deckGenerationQueue.enqueue({
+                processId = UuidGeneratorAdapter.generate();
+                await cardGenerationProcessModel.insert({
+                    fields: [
+                        { key: "id", value: processId },
+                        { key: "user_id", value: user.id },
+                        { key: "deck_id", value: deckId },
+                        { key: "status", value: "processing" },
+                    ],
+                });
+                await deckGenerationQueue.enqueue({
+                    processId,
                     deckId,
                     deckName: deck.name,
                     deckSubject: deck.subject ?? "Geral",
@@ -412,65 +424,22 @@ export class DecksController extends BaseController {
                 res
                     .status(202)
                     .setHeader("Content-Type", "text/html; charset=utf-8")
-                    .send(this.buildQueuedGenerationMarkup(deck.id, jobId));
+                    .send(this.buildProcessingNoticeMarkup(deck.id));
             }
             catch (error) {
+                if (processId) {
+                    try {
+                        await cardGenerationProcessModel.deleteById(processId);
+                    }
+                    catch (cleanupError) {
+                        console.error("Failed to rollback card generation process", cleanupError);
+                    }
+                }
                 console.error("Failed to enqueue AI suggestion", error);
                 res
                     .status(500)
                     .setHeader("Content-Type", "text/html; charset=utf-8")
                     .send('<div class="alert alert-danger" role="alert">Não foi possível enviar para processamento. Tente novamente mais tarde.</div>');
-            }
-        };
-        this.handleGenerationStatus = async (req, res) => {
-            const user = this.ensureAuthenticatedUser(req, res);
-            if (!user) {
-                return;
-            }
-            const { deckId, jobId } = req.params;
-            try {
-                const deck = await this.ensureDeckBelongsToUser(deckId, user.id);
-                if (!deck) {
-                    res
-                        .status(404)
-                        .setHeader("Content-Type", "text/html; charset=utf-8")
-                        .send('<div class="alert alert-danger" role="alert">Baralho não encontrado.</div>');
-                    return;
-                }
-                const status = deckGenerationQueue.getStatus(jobId);
-                if (!status) {
-                    res
-                        .status(404)
-                        .setHeader("Content-Type", "text/html; charset=utf-8")
-                        .send('<div class="alert alert-warning" role="alert">Não foi possível localizar o processamento solicitado.</div>');
-                    return;
-                }
-                if (status.state === "completed") {
-                    res
-                        .status(200)
-                        .setHeader("Content-Type", "text/html; charset=utf-8")
-                        .send(this.buildQueueStatusMarkup(deck.id, jobId, status) +
-                        this.buildCardPreviewMarkup(deck.id, status.cards));
-                    return;
-                }
-                if (status.state === "failed") {
-                    res
-                        .status(500)
-                        .setHeader("Content-Type", "text/html; charset=utf-8")
-                        .send(this.buildQueueStatusMarkup(deck.id, jobId, status));
-                    return;
-                }
-                res
-                    .status(200)
-                    .setHeader("Content-Type", "text/html; charset=utf-8")
-                    .send(this.buildQueueStatusMarkup(deck.id, jobId, status));
-            }
-            catch (error) {
-                console.error("Failed to check generation status", error);
-                res
-                    .status(500)
-                    .setHeader("Content-Type", "text/html; charset=utf-8")
-                    .send('<div class="alert alert-danger" role="alert">Não foi possível verificar o status. Tente novamente.</div>');
             }
         };
         this.cardGenerator = new DeckCardGeneratorService();
@@ -483,7 +452,6 @@ export class DecksController extends BaseController {
         this.router.put("/decks/:deckId/cards/:cardId", this.handleUpdateCard);
         this.router.delete("/decks/:deckId/cards/:cardId", this.handleDeleteCard);
         this.router.post("/decks/:deckId/cards/:cardId/move-to-review", this.handleMoveCardToReview);
-        this.router.get("/decks/:deckId/generate/status/:jobId", this.handleGenerationStatus);
         this.router.post("/decks/:deckId/generate", deckGenerateRateLimiter, this.handleGenerateCards);
     }
     createDeckBaseSchema() {
@@ -510,38 +478,20 @@ export class DecksController extends BaseController {
             ],
         });
     }
-    buildQueuedGenerationMarkup(deckId, jobId) {
-        const status = {
-            state: "queued",
-            message: "Sua solicitação entrou na fila RabbitMQ e será processada em instantes...",
-        };
-        return this.buildQueueStatusMarkup(deckId, jobId, status);
-    }
-    buildQueueStatusMarkup(deckId, jobId, status) {
-        const isWaiting = status.state === "queued" || status.state === "processing";
-        const baseIcon = {
-            queued: "bi-hourglass-split text-warning",
-            processing: "bi-arrow-repeat text-primary",
-            completed: "bi-check-circle-fill text-success",
-            failed: "bi-exclamation-triangle-fill text-danger",
-        };
-        const icon = baseIcon[status.state];
-        const pollAttributes = isWaiting
-            ? `hx-get="/api/decks/${deckId}/generate/status/${jobId}" hx-trigger="load, every 2s" hx-target="#generationPreview" hx-swap="innerHTML"`
-            : "";
-        const secondaryText = isWaiting
-            ? "Aguardando processamento da fila. Esta área será atualizada automaticamente."
-            : status.state === "failed"
-                ? "Houve um problema ao processar sua solicitação. Tente novamente em instantes."
-                : "Confira abaixo o resultado do processamento.";
+    buildProcessingNoticeMarkup(deckId) {
         return `
-      <div class="card border-0 shadow-sm" ${pollAttributes}>
-        <div class="card-body p-4 d-flex align-items-center gap-3">
-          <i class="bi ${icon} fs-3"></i>
-          <div>
-            <p class="mb-1 fw-semibold">${status.message}</p>
-            <p class="mb-0 text-secondary small">${secondaryText}</p>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-arrow-repeat text-primary fs-3"></i>
+            <div>
+              <p class="mb-1 fw-semibold">Estamos gerando novas cartas para este baralho.</p>
+              <p class="mb-0 text-secondary small">Você pode voltar para o baralho e continuar estudando enquanto processamos o conteúdo.</p>
+            </div>
           </div>
+          <a class="btn btn-outline-primary ms-md-auto" href="/app/decks/${deckId}/cards">
+            Voltar para o baralho
+          </a>
         </div>
       </div>
     `;

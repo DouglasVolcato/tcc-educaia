@@ -5,6 +5,7 @@ import { DbConnection } from "../../db/db-connection.ts";
 import { deckModel } from "../../db/models/deck.model.ts";
 import { flashcardModel } from "../../db/models/flashcard.model.ts";
 import { integrationModel } from "../../db/models/integration.model.ts";
+import { cardGenerationProcessModel } from "../../db/models/card-generation-process.model.ts";
 import { userModel, UserRow } from "../../db/models/user.model.ts";
 
 export type FlashcardView = {
@@ -29,6 +30,8 @@ export type DeckView = {
   newCards: number;
   progress: number;
   updatedAt: string;
+  activeProcesses: number;
+  hasActiveProcesses: boolean;
   cards?: FlashcardView[];
 };
 
@@ -144,27 +147,32 @@ export class AppController extends BaseController {
       const difficulty = req.query.difficulty?.toString();
 
       const data = await this.runInTransaction(async () => {
-        const { row: userRow, view: user } = await this.loadCurrentUser(req);
-        const deck = await deckModel.findDeckWithStats({ deckId, userId: userRow.id });
+      const { row: userRow, view: user } = await this.loadCurrentUser(req);
+      const deck = await deckModel.findDeckWithStats({ deckId, userId: userRow.id });
 
-        if (!deck) {
-          return { user, deck: null };
-        }
+      if (!deck) {
+        return { user, deck: null };
+      }
 
-        const cards = await flashcardModel.findByDeck({
-          deckId,
-          userId: userRow.id,
-          search: query,
-          difficulty,
-        });
-
-        const deckView: DeckView = {
-          ...this.mapDeckStatsToView(deck),
-          cards: cards.map((card) => this.mapFlashcardToView(card)),
-        };
-
-        return { user, deck: deckView };
+      const processes = await cardGenerationProcessModel.findActiveByDeck({
+        deckId,
+        userId: userRow.id,
       });
+
+      const cards = await flashcardModel.findByDeck({
+        deckId,
+        userId: userRow.id,
+        search: query,
+        difficulty,
+      });
+
+      const deckView: DeckView = {
+        ...this.mapDeckStatsToView(deck, processes.length),
+        cards: cards.map((card) => this.mapFlashcardToView(card)),
+      };
+
+      return { user, deck: deckView };
+    });
 
       if (!data.deck) {
         res.status(404).render("app/not-found", {
@@ -464,7 +472,7 @@ export class AppController extends BaseController {
     return decks;
   }
 
-  private mapDeckStatsToView(deck: any): DeckView {
+  private mapDeckStatsToView(deck: any, activeProcesses = 0): DeckView {
     return {
       id: deck.id,
       name: deck.name,
@@ -476,6 +484,8 @@ export class AppController extends BaseController {
       newCards: Number(deck.new_cards ?? 0),
       progress: Number(deck.progress ?? 0),
       updatedAt: new Date(deck.updated_at).toISOString(),
+      activeProcesses,
+      hasActiveProcesses: activeProcesses > 0,
     };
   }
 

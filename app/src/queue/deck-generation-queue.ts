@@ -2,11 +2,13 @@ import amqplib, { Channel, ChannelModel, ConsumeMessage } from "amqplib";
 import { DeckCardGeneratorService } from "../ai/deck-card-generator.service.ts";
 import { UuidGeneratorAdapter } from "../adapters/uuid-generator-adapter.ts";
 import { flashcardModel } from "../db/models/flashcard.model.ts";
+import { cardGenerationProcessModel } from "../db/models/card-generation-process.model.ts";
 
 export type DeckGenerationTone = "concise" | "standard" | "deep";
 
 interface DeckGenerationPayload {
   jobId: string;
+  processId: string;
   deckId: string;
   deckName: string;
   deckSubject: string;
@@ -14,13 +16,8 @@ interface DeckGenerationPayload {
   content: string;
   goal?: string;
   tone?: DeckGenerationTone;
+  attempts: number;
 }
-
-export type DeckGenerationStatus =
-  | { state: "queued"; message: string }
-  | { state: "processing"; message: string }
-  | { state: "completed"; message: string; cards: { question: string; answer: string }[] }
-  | { state: "failed"; message: string };
 
 class DeckGenerationQueue {
   private readonly queueName = "deck-generation";
@@ -28,7 +25,6 @@ class DeckGenerationQueue {
   private connection?: ChannelModel;
   private channel?: Channel;
   private isConsuming = false;
-  private readonly statuses = new Map<string, DeckGenerationStatus>();
   private readonly cardGenerator = new DeckCardGeneratorService();
 
   async init() {
@@ -41,7 +37,7 @@ class DeckGenerationQueue {
     await this.channel.assertQueue(this.queueName, { durable: true });
   }
 
-  async enqueue(input: Omit<DeckGenerationPayload, "jobId">) {
+  async enqueue(input: Omit<DeckGenerationPayload, "jobId" | "attempts">) {
     if (!this.channel) {
       await this.init();
     }
@@ -51,12 +47,7 @@ class DeckGenerationQueue {
     }
 
     const jobId = UuidGeneratorAdapter.generate();
-    const payload: DeckGenerationPayload = { ...input, jobId };
-
-    this.statuses.set(jobId, {
-      state: "queued",
-      message: "Conteúdo enviado para a fila de geração.",
-    });
+    const payload: DeckGenerationPayload = { ...input, jobId, attempts: 0 };
 
     this.channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(payload)), {
       persistent: true,
@@ -67,10 +58,6 @@ class DeckGenerationQueue {
     }
 
     return jobId;
-  }
-
-  getStatus(jobId: string): DeckGenerationStatus | undefined {
-    return this.statuses.get(jobId);
   }
 
   private async startConsumer() {
@@ -102,10 +89,6 @@ class DeckGenerationQueue {
 
     try {
       payload = JSON.parse(message.content.toString()) as DeckGenerationPayload;
-      this.statuses.set(payload.jobId, {
-        state: "processing",
-        message: "Processando geração na fila RabbitMQ...",
-      });
 
       const cards = await this.cardGenerator.generateCards({
         deckName: payload.deckName,
@@ -132,24 +115,41 @@ class DeckGenerationQueue {
         });
       }
 
-      this.statuses.set(payload.jobId, {
-        state: "completed",
-        message: "Cartas geradas e adicionadas ao baralho.",
-        cards: cards.cards.map((card) => ({
-          question: card.question,
-          answer: card.answer,
-        })),
-      });
+      if (payload.processId) {
+        try {
+          await cardGenerationProcessModel.deleteById(payload.processId);
+        } catch (cleanupError) {
+          console.error("Failed to remove card generation process", cleanupError);
+        }
+      }
 
       this.channel.ack(message);
     } catch (error) {
       console.error("Failed to process deck generation job", error);
-      const jobId = payload?.jobId ?? message.properties.messageId ?? "unknown";
-      this.statuses.set(jobId, {
-        state: "failed",
-        message: "Falha ao processar a geração de flashcards.",
-      });
-      this.channel.nack(message, false, false);
+      const attempts = payload?.attempts ?? 0;
+
+      if (payload && attempts < 2) {
+        const retryPayload: DeckGenerationPayload = {
+          ...payload,
+          attempts: attempts + 1,
+        };
+
+        this.channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(retryPayload)), {
+          persistent: true,
+        });
+        this.channel.ack(message);
+        return;
+      }
+
+      if (payload?.processId) {
+        try {
+          await cardGenerationProcessModel.deleteById(payload.processId);
+        } catch (cleanupError) {
+          console.error("Failed to remove card generation process", cleanupError);
+        }
+      }
+
+      this.channel.ack(message);
     }
   }
 }

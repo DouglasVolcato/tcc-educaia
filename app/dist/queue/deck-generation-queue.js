@@ -2,12 +2,12 @@ import amqplib from "amqplib";
 import { DeckCardGeneratorService } from "../ai/deck-card-generator.service.js";
 import { UuidGeneratorAdapter } from "../adapters/uuid-generator-adapter.js";
 import { flashcardModel } from "../db/models/flashcard.model.js";
+import { cardGenerationProcessModel } from "../db/models/card-generation-process.model.js";
 class DeckGenerationQueue {
     constructor() {
         this.queueName = "deck-generation";
         this.connectionString = process.env.RABBITMQ_URL ?? "amqp://rabbitmq:5672";
         this.isConsuming = false;
-        this.statuses = new Map();
         this.cardGenerator = new DeckCardGeneratorService();
     }
     async init() {
@@ -26,11 +26,7 @@ class DeckGenerationQueue {
             throw new Error("RabbitMQ channel is not available");
         }
         const jobId = UuidGeneratorAdapter.generate();
-        const payload = { ...input, jobId };
-        this.statuses.set(jobId, {
-            state: "queued",
-            message: "Conteúdo enviado para a fila de geração.",
-        });
+        const payload = { ...input, jobId, attempts: 0 };
         this.channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(payload)), {
             persistent: true,
         });
@@ -38,9 +34,6 @@ class DeckGenerationQueue {
             await this.startConsumer();
         }
         return jobId;
-    }
-    getStatus(jobId) {
-        return this.statuses.get(jobId);
     }
     async startConsumer() {
         if (!this.channel) {
@@ -64,10 +57,6 @@ class DeckGenerationQueue {
         let payload = null;
         try {
             payload = JSON.parse(message.content.toString());
-            this.statuses.set(payload.jobId, {
-                state: "processing",
-                message: "Processando geração na fila RabbitMQ...",
-            });
             const cards = await this.cardGenerator.generateCards({
                 deckName: payload.deckName,
                 deckSubject: payload.deckSubject,
@@ -91,24 +80,39 @@ class DeckGenerationQueue {
                     ],
                 });
             }
-            this.statuses.set(payload.jobId, {
-                state: "completed",
-                message: "Cartas geradas e adicionadas ao baralho.",
-                cards: cards.cards.map((card) => ({
-                    question: card.question,
-                    answer: card.answer,
-                })),
-            });
+            if (payload.processId) {
+                try {
+                    await cardGenerationProcessModel.deleteById(payload.processId);
+                }
+                catch (cleanupError) {
+                    console.error("Failed to remove card generation process", cleanupError);
+                }
+            }
             this.channel.ack(message);
         }
         catch (error) {
             console.error("Failed to process deck generation job", error);
-            const jobId = payload?.jobId ?? message.properties.messageId ?? "unknown";
-            this.statuses.set(jobId, {
-                state: "failed",
-                message: "Falha ao processar a geração de flashcards.",
-            });
-            this.channel.nack(message, false, false);
+            const attempts = payload?.attempts ?? 0;
+            if (payload && attempts < 2) {
+                const retryPayload = {
+                    ...payload,
+                    attempts: attempts + 1,
+                };
+                this.channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(retryPayload)), {
+                    persistent: true,
+                });
+                this.channel.ack(message);
+                return;
+            }
+            if (payload?.processId) {
+                try {
+                    await cardGenerationProcessModel.deleteById(payload.processId);
+                }
+                catch (cleanupError) {
+                    console.error("Failed to remove card generation process", cleanupError);
+                }
+            }
+            this.channel.ack(message);
         }
     }
 }
