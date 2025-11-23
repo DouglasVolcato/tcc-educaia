@@ -49,7 +49,7 @@ export class DecksController extends BaseController {
                 });
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to create deck", error, res);
+                this.handleUnexpectedError("Erro ao criar baralho", error, res);
             }
         };
         this.handleUpdateDeck = async (req, res) => {
@@ -117,7 +117,7 @@ export class DecksController extends BaseController {
                 });
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to update deck", error, res);
+                this.handleUnexpectedError("Erro ao atualizar baralho", error, res);
             }
         };
         this.handleDeleteDeck = async (req, res) => {
@@ -155,7 +155,7 @@ export class DecksController extends BaseController {
                 });
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to delete deck", error, res);
+                this.handleUnexpectedError("Erro ao remover baralho", error, res);
             }
         };
         this.handleCreateCard = async (req, res) => {
@@ -219,7 +219,7 @@ export class DecksController extends BaseController {
                     .send(html);
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to create card", error, res);
+                this.handleUnexpectedError("Erro ao criar carta", error, res);
             }
         };
         this.handleUpdateCard = async (req, res) => {
@@ -299,7 +299,7 @@ export class DecksController extends BaseController {
                     .send(html);
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to update card", error, res);
+                this.handleUnexpectedError("Erro ao atualizar carta", error, res);
             }
         };
         this.handleMoveCardToReview = async (req, res) => {
@@ -376,7 +376,7 @@ export class DecksController extends BaseController {
                 });
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to delete card", error, res);
+                this.handleUnexpectedError("Erro ao remover carta", error, res);
             }
         };
         this.handleGenerateCards = async (req, res) => {
@@ -446,10 +446,8 @@ export class DecksController extends BaseController {
                         await cardGenerationProcessModel.deleteById(processId);
                     }
                     catch (cleanupError) {
-                        console.error("Failed to rollback card generation process", cleanupError);
                     }
                 }
-                console.error("Failed to enqueue AI suggestion", error);
                 res
                     .status(500)
                     .setHeader("Content-Type", "text/html; charset=utf-8")

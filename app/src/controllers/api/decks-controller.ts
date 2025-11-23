@@ -99,7 +99,7 @@ export class DecksController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      this.handleUnexpectedError("Failed to create deck", error, res);
+      this.handleUnexpectedError("Erro ao criar baralho", error, res);
     }
   };
 
@@ -181,7 +181,7 @@ export class DecksController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      this.handleUnexpectedError("Failed to update deck", error, res);
+      this.handleUnexpectedError("Erro ao atualizar baralho", error, res);
     }
   };
 
@@ -223,7 +223,7 @@ export class DecksController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      this.handleUnexpectedError("Failed to delete deck", error, res);
+      this.handleUnexpectedError("Erro ao remover baralho", error, res);
     }
   };
 
@@ -296,7 +296,7 @@ export class DecksController extends BaseController {
         .setHeader("Content-Type", "text/html; charset=utf-8")
         .send(html);
     } catch (error) {
-      this.handleUnexpectedError("Failed to create card", error, res);
+      this.handleUnexpectedError("Erro ao criar carta", error, res);
     }
   };
 
@@ -393,7 +393,7 @@ export class DecksController extends BaseController {
         .setHeader("Content-Type", "text/html; charset=utf-8")
         .send(html);
     } catch (error) {
-      this.handleUnexpectedError("Failed to update card", error, res);
+      this.handleUnexpectedError("Erro ao atualizar carta", error, res);
     }
   };
 
@@ -493,7 +493,7 @@ export class DecksController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      this.handleUnexpectedError("Failed to delete card", error, res);
+      this.handleUnexpectedError("Erro ao remover carta", error, res);
     }
   };
 
@@ -572,11 +572,9 @@ export class DecksController extends BaseController {
         try {
           await cardGenerationProcessModel.deleteById(processId);
         } catch (cleanupError) {
-          console.error("Failed to rollback card generation process", cleanupError);
         }
       }
 
-      console.error("Failed to enqueue AI suggestion", error);
       res
         .status(500)
         .setHeader("Content-Type", "text/html; charset=utf-8")

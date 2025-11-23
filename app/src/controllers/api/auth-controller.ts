@@ -13,8 +13,8 @@ export class AuthController extends BaseController {
   }
 
   protected registerRoutes(): void {
-    this.router.post("/auth/register", this.handleRegister);
-    this.router.post("/auth/login", this.handleLogin);
+    // this.router.post("/auth/register", this.handleRegister);
+    // this.router.post("/auth/login", this.handleLogin);
     this.router.post("/auth/google", this.handleGoogleLogin);
   }
 
@@ -115,7 +115,6 @@ export class AuthController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      console.error("Failed to register user", error);
       this.sendToastResponse(res, {
         status: 500,
         message: "Não foi possível criar sua conta. Tente novamente em instantes.",
@@ -172,7 +171,6 @@ export class AuthController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      console.error("Failed to authenticate user", error);
       this.sendToastResponse(res, {
         status: 500,
         message: "Não foi possível acessar sua conta. Tente novamente em instantes.",
@@ -251,7 +249,7 @@ export class AuthController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      console.error("Failed to authenticate with Google", error);
+      console.error(error);
       this.sendToastResponse(res, {
         status: 500,
         message: "Não foi possível acessar sua conta via Google. Tente novamente em instantes.",

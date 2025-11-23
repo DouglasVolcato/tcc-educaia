@@ -30,65 +30,13 @@
                 <span class="d-inline-block fw-bold text-primary small mb-1">EducaIA</span>
                 <span class="badge bg-primary-subtle text-primary pill mb-2">Acesse sua conta</span>
                 <h2 class="fw-bold">Entrar</h2>
-                <p class="text-secondary mb-0">Use seu e-mail e senha cadastrados.</p>
               </div>
               <% if (googleClientId) { %>
                 <div class="d-grid gap-2 mb-3" id="google-signin-wrapper">
                   <div id="google-signin-button"></div>
-                  <p class="text-secondary small mb-0">Usaremos apenas seu nome e e-mail.</p>
-                </div>
-                <div class="d-flex align-items-center gap-2 text-secondary text-uppercase small mb-3">
-                  <div class="flex-grow-1 border-top"></div>
-                  <span>ou</span>
-                  <div class="flex-grow-1 border-top"></div>
                 </div>
               <% } %>
-              <form
-                class="d-grid gap-3"
-                hx-post="/api/auth/login"
-                hx-target="#global-alert-container"
-                hx-swap="beforeend"
-                data-loading-overlay="true"
-              >
-                <div>
-                  <label class="form-label fw-semibold" for="email">E-mail</label>
-                  <input
-                    class="form-control form-control-lg"
-                    type="email"
-                    name="email"
-                    id="email"
-                    placeholder="seuemail@exemplo.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <div class="d-flex justify-content-between align-items-center">
-                    <label class="form-label fw-semibold" for="password">Senha</label>
-                    <a class="small link-primary text-decoration-none" href="#">Esqueci minha senha</a>
-                  </div>
-                  <input
-                    class="form-control form-control-lg"
-                    type="password"
-                    name="password"
-                    id="password"
-                    placeholder="Digite sua senha"
-                    minlength="6"
-                    required
-                  />
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="true" id="remember" name="remember" />
-                  <label class="form-check-label" for="remember">Permanecer conectado</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-lg" data-loading-button>
-                  <span data-loading-label>Entrar</span>
-                  <span class="d-none" data-loading-spinner>
-                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
-                    <span class="ms-2">Entrando...</span>
-                  </span>
-                </button>
-              </form>
-              <div class="border-top mt-4 pt-4 text-center">
+              <div class="mt-4 pt-4 text-center">
                 <p class="mb-1 text-secondary">Ainda não tem conta?</p>
                 <a class="fw-semibold" href="/app/register">Comece agora gratuitamente</a>
               </div>

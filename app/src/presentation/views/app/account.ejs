@@ -21,13 +21,9 @@
                       </div>
                       <div class="col-md-6">
                         <label class="form-label fw-semibold" for="accountEmail">E-mail</label>
-                        <input class="form-control" type="email" id="accountEmail" name="email" value="<%= user.email %>" />
+                        <input class="form-control" type="email" id="accountEmail" name="email" value="<%= user.email %>" disabled />
                       </div>
-                      <div class="col-md-6">
-                        <label class="form-label fw-semibold" for="accountPassword">Senha</label>
-                        <input class="form-control" type="password" id="accountPassword" name="password" value="" />
-                      </div>
-                      <div class="col-md-6 d-flex align-items-end gap-2 justify-content-end">
+                      <div class="col-md-12 d-flex align-items-end gap-2 justify-content-end">
                         <button type="submit" class="btn btn-primary" data-loading-button>
                           <span data-loading-label>Salvar alterações</span>
                           <span class="d-none" data-loading-spinner>

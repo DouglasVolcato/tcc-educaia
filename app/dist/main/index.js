@@ -33,7 +33,11 @@ app.locals.brand = "EducaIA";
 app.locals.staticVersion = "1";
 const ONE_MONTH_IN_MS = 1000 * 60 * 60 * 24 * 30;
 app.use(cors());
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");

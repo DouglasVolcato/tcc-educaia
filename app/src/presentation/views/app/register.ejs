@@ -17,80 +17,9 @@
               <% if (googleClientId) { %>
                 <div class="d-grid gap-2 mb-3" id="google-signin-wrapper">
                   <div id="google-signin-button"></div>
-                  <p class="text-secondary small mb-0">Usaremos apenas seu nome e e-mail.</p>
-                </div>
-                <div class="d-flex align-items-center gap-2 text-secondary text-uppercase small mb-3">
-                  <div class="flex-grow-1 border-top"></div>
-                  <span>ou</span>
-                  <div class="flex-grow-1 border-top"></div>
                 </div>
               <% } %>
-              <form
-                class="d-grid gap-3"
-                hx-post="/api/auth/register"
-                hx-target="#global-alert-container"
-                hx-swap="beforeend"
-                data-loading-overlay="true"
-              >
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="firstName">Nome</label>
-                    <input class="form-control form-control-lg" type="text" id="firstName" name="firstName" required />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="lastName">Sobrenome</label>
-                    <input class="form-control form-control-lg" type="text" id="lastName" name="lastName" required />
-                  </div>
-                </div>
-                <div>
-                  <label class="form-label fw-semibold" for="email">E-mail</label>
-                  <input class="form-control form-control-lg" type="email" id="email" name="email" required />
-                </div>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="password">Senha</label>
-                    <input class="form-control form-control-lg" type="password" id="password" name="password" minlength="6" required />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold" for="confirmPassword">Confirmar senha</label>
-                    <input class="form-control form-control-lg" type="password" id="confirmPassword" name="confirmPassword" minlength="6" required />
-                  </div>
-                </div>
-                <div>
-                  <label class="form-label fw-semibold" for="goal">Objetivo de estudo</label>
-                  <select class="form-select form-select-lg" id="goal" name="goal" required>
-                    <option value="">Selecione uma opção</option>
-                    <option value="vestibular">Preparação para vestibular</option>
-                    <option value="idiomas">Aprender um idioma</option>
-                    <option value="carreira">Aprimorar carreira profissional</option>
-                    <option value="concurso">Concurso público</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="form-label fw-semibold" for="timezone">Fuso horário</label>
-                  <select class="form-select form-select-lg" id="timezone" name="timezone" required>
-                    <option value="America/Sao_Paulo">(GMT-03:00) São Paulo</option>
-                    <option value="America/Manaus">(GMT-04:00) Manaus</option>
-                    <option value="America/Fortaleza">(GMT-03:00) Fortaleza</option>
-                    <option value="America/Recife">(GMT-03:00) Recife</option>
-                  </select>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="true" id="terms" name="terms" required />
-                  <label class="form-check-label" for="terms">
-                    Concordo com os <a class="link-primary text-decoration-none" href="#">Termos de uso</a> e
-                    <a class="link-primary text-decoration-none" href="#">Política de privacidade</a>.
-                  </label>
-                </div>
-                <button type="submit" class="btn btn-success btn-lg" data-loading-button>
-                  <span data-loading-label>Criar conta gratuita</span>
-                  <span class="d-none" data-loading-spinner>
-                    <span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span>
-                    <span class="ms-2">Configurando ambiente...</span>
-                  </span>
-                </button>
-              </form>
-              <div class="border-top mt-4 pt-4 text-center">
+              <div class="mt-4 pt-4 text-center">
                 <p class="mb-1 text-secondary">Já possui conta?</p>
                 <a class="fw-semibold" href="/app/login">Entrar com meu e-mail</a>
               </div>

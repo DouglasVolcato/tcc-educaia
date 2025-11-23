@@ -1,7 +1,7 @@
 up:
 	@echo "Starting Docker images..."
 	make build
-	docker compose -f docker-compose.yml up --build -d --scale worker=1
+	docker compose -f docker-compose.yml up --build --scale worker=1
 	@echo "Docker images started!"
 
 down:

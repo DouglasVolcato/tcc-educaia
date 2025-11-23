@@ -51,7 +51,7 @@ export class IntegrationController extends BaseController {
                 });
             }
             catch (error) {
-                this.handleUnexpectedError("Failed to update integration", error, res);
+                this.handleUnexpectedError("Erro ao atualizar integração", error, res);
             }
         };
     }

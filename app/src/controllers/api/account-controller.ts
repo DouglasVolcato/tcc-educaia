@@ -2,7 +2,6 @@ import { userModel } from "../../db/models/user.model.ts";
 import { Application, Request, Response } from "express";
 import { BaseController } from "../base-controller.ts";
 import { InputField } from "../../db/repository.ts";
-import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 export class AccountController extends BaseController {
@@ -23,8 +22,6 @@ export class AccountController extends BaseController {
 
     const accountUpdateSchema = z.object({
       name: z.string().trim().min(1, "Informe um nome válido.").optional(),
-      email: z.string().trim().email("Informe um e-mail válido.").optional(),
-      password: z.string().trim().min(6, "A senha deve ter ao menos 6 caracteres.").optional(),
     });
 
     const parsed = accountUpdateSchema.safeParse(req.body ?? {});
@@ -37,19 +34,9 @@ export class AccountController extends BaseController {
 
     const updates: InputField[] = [];
     const hasName = Object.prototype.hasOwnProperty.call(parsed.data, "name");
-    const hasEmail = Object.prototype.hasOwnProperty.call(parsed.data, "email");
-    const hasPassword = Object.prototype.hasOwnProperty.call(parsed.data, "password");
 
     if (hasName && parsed.data.name) {
       updates.push({ key: "name", value: parsed.data.name });
-    }
-
-    if (hasEmail && parsed.data.email) {
-      updates.push({ key: "email", value: parsed.data.email.toLowerCase() });
-    }
-
-    if (hasPassword && parsed.data.password) {
-      updates.push({ key: "password", value: await bcrypt.hash(parsed.data.password, 10) });
     }
 
     if (updates.length === 0) {
@@ -69,7 +56,7 @@ export class AccountController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      this.handleUnexpectedError("Failed to update account", error, res);
+      this.handleUnexpectedError("Erro ao atualizar dados da conta", error, res);
     }
   };
 
@@ -96,7 +83,7 @@ export class AccountController extends BaseController {
         variant: "success",
       });
     } catch (error) {
-      this.handleUnexpectedError("Failed to update preferences", error, res);
+      this.handleUnexpectedError("Erro ao atualizar preferências", error, res);
     }
   };
 }
