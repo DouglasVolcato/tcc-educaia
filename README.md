@@ -2,6 +2,18 @@
 
 EducaIA é um aplicativo web que ajuda nos estudos a partir de flashcards gerados e gerenciados com repetição espaçada. O usuário envia conhecimento e anotações em texto, o agente de IA transforma esse material em flashcards, e o aplicativo controla o ciclo de revisões de forma dinâmica a partir do feedback dado em cada sessão.
 
+## Telas principais
+Algumas telas para visualizar o fluxo do app:
+- ![Login](docs/screens/login.png)
+- ![Criar conta](docs/screens/create-account.png)
+- ![Lista de baralhos](docs/screens/decks.png)
+- ![Criar baralho](docs/screens/deck-creation.png)
+- ![Visualizar baralho](docs/screens/deck-view.png)
+- ![Criar flashcards](docs/screens/create-flashcards.png)
+- ![Revisar baralho](docs/screens/deck-review.png)
+- ![Indicadores](docs/screens/indicators.png)
+- ![Minha conta](docs/screens/my-account.png)
+
 ## Funcionalidades principais
 - Criação e gerenciamento de baralhos de flashcards para diferentes tópicos de estudo.
 - Conversão automática de textos e anotações em flashcards por meio de um agente de IA (LLM via API da OpenAI).
@@ -16,12 +28,19 @@ EducaIA é um aplicativo web que ajuda nos estudos a partir de flashcards gerado
 - Integração com LLM (OpenAI API) para geração de flashcards.
 - TDD aplicado com Jest nos módulos mais críticos e nos *wrappers* de serviços e bibliotecas externas.
 - Diagrama geral em `docs/diagrams/app_architecture.png`.
+- Arquitetura com fila RabbitMQ para processar pedidos de geração de flashcards de forma assíncrona.
+- Deploy com duas réplicas do app em Docker para melhorar throughput do consumo da fila e manter a API responsiva.
+- Senhas armazenadas com hash (bcrypt) para proteger credenciais.
+- Sessão autenticada via JWT enviado em cookie seguro, mantendo o estado de forma compatível com execução serverless e reautenticando automaticamente no navegador.
+
+### Diagrama de arquitetura
+![Arquitetura da aplicação](docs/diagrams/app_architecture.png)
 
 ## Configuração do ambiente
 1. Copie o arquivo `.env.example` para `.env` e preencha as variáveis necessárias.
-2. Suba o ambiente de desenvolvimento com Docker:
-   - `make up-dev` para iniciar os serviços.
-   - `make down-dev` para parar os serviços.
+2. Suba o ambiente com Docker:
+   - Ambiente de desenvolvimento: `make up-dev` para iniciar e `make down-dev` para parar.
+   - Ambiente de produção: `make up` para iniciar e `make down` para parar.
 
 ## Desenvolvimento e testes
 - O projeto é baseado em Node.js + TypeScript; use os scripts do `package.json` conforme necessário (instalação de dependências, lint, testes, etc.).
