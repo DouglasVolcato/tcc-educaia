@@ -56,6 +56,7 @@ create table flashcards (
     difficulty varchar(255) default 'medium',
     status varchar(255) default 'new' check (status in ('new', 'learning', 'mastered')),
     review_count integer,
+    tags TEXT[] DEFAULT '{}',
     last_review_date timestamp,
     next_review_date timestamp default now(),
     created_at timestamp default now(),
